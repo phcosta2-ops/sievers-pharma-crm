@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sievers Pharma CRM</title>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;background:#F1F5F9;overflow:hidden}
+  ::-webkit-scrollbar{width:5px}
+  ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}
+  button{cursor:pointer;font-family:inherit}
+  input,textarea,select{font-family:inherit}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .rec-pulse{animation:pulse 1.2s ease-in-out infinite}
+</style>
+</head>
+<body>
+<div id="root" style="height:100vh"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect, useCallback } = React;
+
+// ─── PALETTE ─────────────────────────────────────────────────────────────────
+const C = {
+  sidebar:"#0B1829", sidebarHover:"#162942",
+  blue:"#0EA5E9", blueDim:"rgba(14,165,233,0.1)",
+  green:"#10B981", greenDim:"rgba(16,185,129,0.08)",
+  amber:"#F59E0B", amberDim:"rgba(245,158,11,0.08)",
+  red:"#EF4444", redDim:"rgba(239,68,68,0.08)",
+  violet:"#8B5CF6", violetDim:"rgba(139,92,246,0.08)",
+  gray:"#94A3B8", grayDim:"rgba(148,163,184,0.1)",
+  bg:"#F1F5F9", card:"#FFFFFF", border:"#E2E8F0",
+  text:"#0F172A", sub:"#64748B",
+};
+
+const INSTRUMENTS = [
+  {key:"toc_lab", label:"TOC Lab",    short:"TOC"},
+  {key:"cond_m9", label:"Cond M9",    short:"M9"},
+  {key:"eclipse", label:"Eclipse",    short:"ECL"},
+  {key:"cv_lab",  label:"CV Lab",     short:"CVL"},
+  {key:"cv_ol",   label:"CV O/L",     short:"OLC"},
+  {key:"fac",     label:"FAC",        short:"FAC"},
+  {key:"fa",      label:"FA",         short:"FA"},
+  {key:"online",  label:"Online TOC", short:"ONL"},
+];
+
+// ─── SEED DATA ────────────────────────────────────────────────────────────────
+const SEED_ACCOUNTS = [
+  {
+    id:1, name:"Abbvie", site:"São Paulo/SP", type:"Biotechnology", priority:"high",
+    lastVisit:"2025-03-20", rtt:false,
+    instruments:{
+      toc_lab:{status:"sievers",model:"Sievers 900"}, cond_m9:{status:"sievers",model:"M9"},
+      eclipse:{status:"none"}, cv_lab:{status:"sievers",model:"Sievers CV"},
+      cv_ol:{status:"none"}, fac:{status:"sievers",model:"FAC"},
+      fa:{status:"sievers"}, online:{status:"competitor",brand:"Anatel/Thornton"},
+    },
+    departments:{
+      qc_lab:{water_type:"WFI",uso:"Control & Release",loops:15,pontos_uso:235,nivel_ideal:"15 ppb",nivel_alarme:"250 ppb",amostras_toc:70,amostras_cond:70,dado_lote:true,jp16:false,
+        contacts:[{name:"Mike Gray",role:"QC Manager",email:""}]},
+      cv_lab:{vendor:"Sievers",amostras:0,vendor_type:"TOC",criterio_toc:"",rsd_ideal:"",
+        contacts:[{name:"Velda Pomales",role:"CV Specialist",email:""},{name:"Joanna Ferrero",role:"CV",email:""}]},
+      rd:{contacts:[{name:"Velda Pomales",role:"R&D SME",email:""}]},
+      producao:{contacts:[{name:"Drew Roberts",role:"Director (candidate)",email:""}]},
+    },
+    consumables:{vials:{vendor:"Sievers/Fisher",type:"DUCT/40 mL"},standards:{vendor:"Sievers",desc:"5 kits/quarter"}},
+    services:{vendor:"Sievers",desc:"7 annual PMs — 900 series"},
+    projects:[], meetings:[],
+    notes:"Strategic account. Opportunity: Eclipse (endotoxin) + online migration to M9.",
+  },
+  {
+    id:2, name:"Aché Laboratórios", site:"São Paulo/SP", type:"Medicines", priority:"high",
+    lastVisit:null, rtt:false,
+    instruments:{toc_lab:{status:"none"},cond_m9:{status:"none"},eclipse:{status:"none"},cv_lab:{status:"unknown"},cv_ol:{status:"unknown"},fac:{status:"none"},fa:{status:"none"},online:{status:"none"}},
+    departments:{qc_lab:{contacts:[{name:"Lígia Oliveira",role:"QC",email:"ligia.oliveira@ache.com.br"}]},cv_lab:{contacts:[]},rd:{contacts:[]},producao:{contacts:[]}},
+    consumables:{vials:{},standards:{}}, services:{},
+    projects:[{name:"Injectable plant expansion",status:"Under evaluation"}], meetings:[],
+    notes:"Injectable plant expansion — full ecosystem entry opportunity.",
+  },
+  {
+    id:3, name:"Anovis Industrial Farmacêutica", site:"Taboão da Serra/SP", type:"Medicines", priority:"medium",
+    lastVisit:null, rtt:false,
+    instruments:{toc_lab:{status:"none"},cond_m9:{status:"none"},eclipse:{status:"none"},cv_lab:{status:"competitor",brand:"SPECTRA"},cv_ol:{status:"none"},fac:{status:"none"},fa:{status:"none"},online:{status:"none"}},
+    departments:{qc_lab:{contacts:[{name:"R. Peabreu",role:"",email:"rpeabreu@uniaoquimica.com.br"}]},cv_lab:{contacts:[{name:"M. Horikawa",role:"",email:"mmhorikawa@anovis.com.br"}]},rd:{contacts:[]},producao:{contacts:[]}},
+    consumables:{vials:{},standards:{vendor:"SPECTRA",desc:"OQ standards"}},
+    services:{vendor:"SPECTRA",desc:"OQ"},
+    projects:[], meetings:[],
+    notes:"SPECTRA in CV and services. Build migration strategy.",
+  },
+  {
+    id:4, name:"Apsen Farmacêutica", site:"São Paulo/SP", type:"Generics", priority:"medium",
+    lastVisit:null, rtt:false,
+    instruments:{toc_lab:{status:"none"},cond_m9:{status:"none"},eclipse:{status:"none"},cv_lab:{status:"unknown"},cv_ol:{status:"none"},fac:{status:"none"},fa:{status:"none"},online:{status:"none"}},
+    departments:{qc_lab:{contacts:[{name:"Evandro Tolentino",role:"",email:"evandro.tolentino@apsen.com.br"}]},cv_lab:{contacts:[]},rd:{contacts:[]},producao:{contacts:[]}},
+    consumables:{vials:{},standards:{}}, services:{}, projects:[], meetings:[], notes:"",
+  },
+  {
+    id:5, name:"Alcon Laboratórios do Brasil", site:"São Paulo/SP", type:"Ophthalmological", priority:"medium",
+    lastVisit:null, rtt:false,
+    instruments:{toc_lab:{status:"none"},cond_m9:{status:"none"},eclipse:{status:"none"},cv_lab:{status:"none"},cv_ol:{status:"none"},fac:{status:"none"},fa:{status:"none"},online:{status:"none"}},
+    departments:{qc_lab:{contacts:[{name:"Patricia Cipolletta",role:"",email:"patricia.cipolletta@alcon.com"}]},cv_lab:{contacts:[]},rd:{contacts:[]},producao:{contacts:[]}},
+    consumables:{vials:{},standards:{}}, services:{}, projects:[], meetings:[], notes:"",
+  },
+];
+
+const SEED_INTEL = {
+  updatedAt:"",
+  products:[
+    {instrument:"TOC Lab (M9/900)",roadmap:"M9 Elite launch Q3 2025 — sub-ppb detection, 21 CFR Part 11 native",pricing:"List ~USD 28,500",promos:"900 trade-in: 15% off through Q2"},
+    {instrument:"Eclipse (Endotoxin)",roadmap:"Eclipse Plus with automated dilution Q4 2025. 96-well adapter kit now available.",pricing:"List ~USD 34,000",promos:"Bundle Eclipse + TOC: 10% off second unit"},
+    {instrument:"Online TOC",roadmap:"SieversONL 5 — Modbus/OPC-UA native, IP66 enclosure",pricing:"List ~USD 18,000",promos:""},
+    {instrument:"Consumables (DUCT Vials)",roadmap:"DUCT Vial 40mL with conductivity liner — no glass interference",pricing:"",promos:"Volume discount 10%+ for 500+ units/year"},
+  ],
+  competitive:[
+    {competitor:"SPECTRA (Shimadzu)",notes:"Aggressive CV pricing. Weakness: no native conductivity integration, limited 21 CFR Part 11 audit trail. Counter: TCO + single vendor."},
+    {competitor:"Anatel/Thornton (online)",notes:"Legacy WFI fleet aging. Counter: Sievers ONL — ISPE best practice, modern connectivity."},
+    {competitor:"Metrohm (TOC)",notes:"Growing in smaller pharma. Counter: Sievers regulatory pedigree (USP <643>, JP-16, EP 2.2.44) + Brazil service network."},
+  ],
+  regulatory:[
+    {update:"JP-16 (Japanese Pharmacopoeia 16th Ed.)",notes:"Adoption increasing among Brazil exporters. M9 and 900 series fully compliant."},
+    {update:"ANVISA RDC 301/2019",notes:"Water quality monitoring — Sievers referenced in ANVISA technical notes."},
+    {update:"USP <645> Conductivity / <643> TOC",notes:"Recent revision aligns WFI limits globally. Use to justify instrument upgrade."},
+  ],
+  strategic:[
+    {segment:"Injectable manufacturers",priority:"Critical",notes:"TOC+Cond (M9), Eclipse for endotoxin, DUCT Vials. Full ecosystem pitch."},
+    {segment:"Cleaning validation labs",priority:"High",notes:"M9 for rinse water, system suitability kits, method development support."},
+    {segment:"Biotech / biologics",priority:"High",notes:"Eclipse is primary entry. Follow with TOC for buffer/media monitoring."},
+  ],
+  notes:"",
+};
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+const statusColor = s => s==="sievers"?C.green : s==="competitor"?C.amber : s==="unknown"?C.gray : C.border;
+const statusBg    = s => s==="sievers"?C.greenDim : s==="competitor"?C.amberDim : s==="unknown"?C.grayDim : C.bg;
+const prioColor   = p => p==="high"?C.red : p==="medium"?C.amber : C.gray;
+const prioLabel   = p => p==="high"?"High" : p==="medium"?"Medium" : "Low";
+const daysAgo     = d => d ? Math.floor((Date.now()-new Date(d).getTime())/86400000) : null;
+
+function visitScore(acc) {
+  const gaps = INSTRUMENTS.filter(d=>acc.instruments[d.key].status==="none").length;
+  const comp = INSTRUMENTS.filter(d=>acc.instruments[d.key].status==="competitor").length;
+  const dv = daysAgo(acc.lastVisit);
+  return Math.min(gaps*8 + comp*12 + (!acc.lastVisit?20:dv>60?10:0) + (acc.projects?.length?15:0) + (acc.priority==="high"?10:acc.priority==="medium"?5:0), 99);
+}
+function getOpps(acc) {
+  return INSTRUMENTS.map(d=>({...d,...acc.instruments[d.key]})).filter(d=>d.status!=="sievers");
+}
+
+async function callAI(apiKey, system, user) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1200,system,messages:[{role:"user",content:user}]}),
+  });
+  if (!res.ok) throw new Error("API error " + res.status);
+  const data = await res.json();
+  return (data.content||[]).map(b=>b.text||"").join("");
+}
+
+// ─── ATOMS ───────────────────────────────────────────────────────────────────
+function Dot({status,size=9}) {
+  const c = statusColor(status);
+  return <span style={{display:"inline-block",width:size,height:size,borderRadius:"50%",flexShrink:0,background:status==="none"?"transparent":c,border:`2px solid ${c}`}}/>;
+}
+
+function Pill({children,color,small}) {
+  const col = color||C.blue;
+  return <span style={{display:"inline-flex",alignItems:"center",padding:small?"1px 7px":"2px 9px",borderRadius:99,fontSize:small?10:11,fontWeight:500,background:col+"22",color:col,border:`1px solid ${col}40`,whiteSpace:"nowrap"}}>{children}</span>;
+}
+
+function Card({children,style,onClick}) {
+  return <div onClick={onClick} style={{background:C.card,borderRadius:12,padding:"16px 20px",border:`1px solid ${C.border}`,cursor:onClick?"pointer":undefined,...style}}>{children}</div>;
+}
+
+function SL({children}) {
+  return <div style={{fontSize:10,fontWeight:600,letterSpacing:1,color:C.sub,textTransform:"uppercase",marginBottom:10}}>{children}</div>;
+}
+
+function IR({label,value,mono}) {
+  if (value===undefined||value===null||value==="") return null;
+  return <div style={{display:"flex",gap:12,padding:"7px 0",borderBottom:`1px solid ${C.border}`}}>
+    <span style={{fontSize:12,color:C.sub,width:190,flexShrink:0}}>{label}</span>
+    <span style={{fontSize:12,color:C.text,fontFamily:mono?"monospace":undefined,flex:1}}>{String(value)}</span>
+  </div>;
+}
+
+function Btn({children,onClick,color,outline,disabled,style}) {
+  const col = color||C.blue;
+  return <button onClick={onClick} disabled={disabled} style={{padding:"8px 16px",borderRadius:8,background:outline?"transparent":col,color:outline?col:"#fff",border:`1px solid ${outline?col+"60":col}`,fontSize:12,fontWeight:500,cursor:disabled?"not-allowed":"pointer",opacity:disabled?0.55:1,...style}}>{children}</button>;
+}
+
+function TInput({value,onChange,placeholder,style}) {
+  return <input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{width:"100%",padding:"8px 11px",borderRadius:8,border:`1px solid ${C.border}`,fontSize:12,color:C.text,outline:"none",...style}}/>;
+}
+
+function TArea({value,onChange,placeholder,rows,style}) {
+  return <textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={rows||4} style={{width:"100%",padding:"9px 11px",borderRadius:8,border:`1px solid ${C.border}`,fontSize:12,color:C.text,resize:"vertical",outline:"none",...style}}/>;
+}
+
+function CC({c}) {
+  return <div style={{display:"flex",alignItems:"center",gap:9,padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
+    <div style={{width:30,height:30,borderRadius:"50%",background:C.blueDim,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:500,color:C.blue,flexShrink:0}}>{c.name.charAt(0).toUpperCase()}</div>
+    <div>
+      <div style={{fontSize:13,fontWeight:500,color:C.text}}>{c.name}</div>
+      {c.role&&<div style={{fontSize:11,color:C.sub}}>{c.role}</div>}
+      {c.email&&<div style={{fontSize:11,color:C.blue}}>{c.email}</div>}
+    </div>
+  </div>;
+}
+
+function IG({instruments,compact}) {
+  return <div style={{display:"flex",gap:compact?3:6,flexWrap:"wrap"}}>
+    {INSTRUMENTS.map(def=>{
+      const inst = instruments[def.key];
+      const col = statusColor(inst.status);
+      return <div key={def.key} title={`${def.label}: ${inst.status}${inst.brand?" — "+inst.brand:inst.model?" ("+inst.model+")":""}`}
+        style={{display:"flex",alignItems:"center",gap:compact?3:5,padding:compact?"2px 5px":"4px 9px",borderRadius:6,background:statusBg(inst.status),border:`1px solid ${col}40`}}>
+        <Dot status={inst.status} size={compact?6:8}/>
+        <span style={{fontSize:compact?10:11,fontWeight:500,color:col,fontFamily:"monospace"}}>{compact?def.short:def.label}</span>
+      </div>;
+    })}
+  </div>;
+}
+
+// ─── API KEY SETTINGS ────────────────────────────────────────────────────────
+function ApiKeyModal({onSave}) {
+  const [key, setKey] = useState(localStorage.getItem("sievers_api_key")||"");
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(11,24,41,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999}}>
+      <div style={{background:C.card,borderRadius:16,padding:32,width:480,border:`1px solid ${C.border}`}}>
+        <div style={{fontSize:16,fontWeight:500,color:C.text,marginBottom:8}}>Anthropic API Key</div>
+        <div style={{fontSize:12,color:C.sub,marginBottom:20,lineHeight:1.7}}>
+          To use AI features (Visit Brief, Meeting Analysis, Conflict Reports), enter your Anthropic API key below. It will be saved locally in your browser.
+          Get your key at <span style={{color:C.blue}}>console.anthropic.com</span>
+        </div>
+        <TInput value={key} onChange={setKey} placeholder="sk-ant-..." style={{marginBottom:16,fontSize:13}}/>
+        <div style={{display:"flex",gap:8}}>
+          <Btn onClick={()=>{localStorage.setItem("sievers_api_key",key);onSave(key);}} color={C.blue} style={{flex:1}}>Save & continue</Btn>
+        </div>
+        {!key&&<div style={{fontSize:11,color:C.sub,marginTop:10,textAlign:"center"}}>You can also skip and use the CRM without AI features</div>}
+        {!key&&<div style={{textAlign:"center",marginTop:8}}><button onClick={()=>onSave("")} style={{fontSize:11,color:C.sub,background:"none",border:"none",cursor:"pointer",textDecoration:"underline"}}>Skip for now</button></div>}
+      </div>
+    </div>
+  );
+}
+
+// ─── SIDEBAR ─────────────────────────────────────────────────────────────────
+function Sidebar({view,setView,onSettings}) {
+  const nav = [
+    {id:"dashboard",icon:"◈",label:"Dashboard"},
+    {id:"accounts", icon:"⊞",label:"Accounts"},
+    {id:"intel",    icon:"◉",label:"Sievers Intel"},
+    {id:"reports",  icon:"⊟",label:"Conflict Reports"},
+  ];
+  return (
+    <nav style={{width:200,background:C.sidebar,display:"flex",flexDirection:"column",padding:"22px 0",flexShrink:0,height:"100vh"}}>
+      <div style={{padding:"0 18px 24px"}}>
+        <div style={{color:C.blue,fontWeight:600,fontSize:14,letterSpacing:2,textTransform:"uppercase"}}>Sievers</div>
+        <div style={{color:"#475569",fontSize:11,marginTop:3}}>Pharma CRM</div>
+      </div>
+      {nav.map(item=>{
+        const active = view===item.id;
+        return <button key={item.id} onClick={()=>setView(item.id)} style={{display:"flex",alignItems:"center",gap:9,padding:"10px 18px",color:active?"#FFF":"#64748B",background:active?C.sidebarHover:"transparent",fontSize:13,fontWeight:active?500:400,textAlign:"left",borderLeft:`3px solid ${active?C.blue:"transparent"}`,border:"none",width:"100%"}}>
+          <span style={{fontSize:15}}>{item.icon}</span>{item.label}
+        </button>;
+      })}
+      <div style={{marginTop:"auto",padding:"16px 18px",borderTop:"1px solid #1E293B"}}>
+        {[{c:C.green,l:"Sievers"},{c:C.amber,l:"Competitor"},{c:C.gray,l:"Unknown"},{c:C.border,l:"No instrument",e:true}].map(x=>(
+          <div key={x.l} style={{display:"flex",alignItems:"center",gap:5,marginBottom:5}}>
+            <div style={{width:7,height:7,borderRadius:"50%",background:x.e?"transparent":x.c,border:`1.5px solid ${x.c}`,flexShrink:0}}/>
+            <span style={{fontSize:10,color:"#475569"}}>{x.l}</span>
+          </div>
+        ))}
+        <button onClick={onSettings} style={{marginTop:12,width:"100%",padding:"6px 0",borderRadius:6,background:"transparent",border:`1px solid #1E3A5F`,color:"#475569",fontSize:11,cursor:"pointer"}}>⚙ API Settings</button>
+      </div>
+    </nav>
+  );
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+function Dashboard({accounts,onSelect}) {
+  const total = accounts.length;
+  const wS = accounts.filter(a=>Object.values(a.instruments).some(i=>i.status==="sievers")).length;
+  const wC = accounts.filter(a=>Object.values(a.instruments).some(i=>i.status==="competitor")).length;
+  const nV = accounts.filter(a=>!a.lastVisit).length;
+  const ranked = [...accounts].map(a=>({...a,_s:visitScore(a)})).sort((a,b)=>b._s-a._s).slice(0,6);
+  const instrGaps = INSTRUMENTS.map(d=>({
+    ...d,
+    gaps:accounts.filter(a=>a.instruments[d.key].status==="none").length,
+    comp:accounts.filter(a=>a.instruments[d.key].status==="competitor").length,
+  })).sort((a,b)=>(b.gaps+b.comp*1.5)-(a.gaps+a.comp*1.5));
+
+  return (
+    <div style={{padding:28,maxWidth:1100}}>
+      <div style={{marginBottom:22}}>
+        <h1 style={{fontSize:20,fontWeight:500,color:C.text}}>Dashboard</h1>
+        <p style={{fontSize:12,color:C.sub,marginTop:3}}>Sievers pharma account overview</p>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
+        {[{l:"Total accounts",v:total,c:C.blue},{l:"With Sievers",v:wS,c:C.green},{l:"With competitor",v:wC,c:C.amber},{l:"No visit",v:nV,c:C.red}].map((k,i)=>(
+          <Card key={i} style={{padding:"14px 18px"}}>
+            <div style={{fontSize:11,color:C.sub,marginBottom:6}}>{k.l}</div>
+            <div style={{fontSize:30,fontWeight:500,color:k.c,fontFamily:"monospace"}}>{k.v}</div>
+          </Card>
+        ))}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1.4fr 0.6fr",gap:16}}>
+        <Card>
+          <SL>Visit priorities</SL>
+          <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            {ranked.map(acc=>{
+              const opps=getOpps(acc), d=daysAgo(acc.lastVisit);
+              return (
+                <div key={acc.id} onClick={()=>onSelect(acc.id)} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 11px",borderRadius:8,border:`1px solid ${C.border}`,cursor:"pointer",transition:"background 0.1s"}}
+                  onMouseEnter={e=>e.currentTarget.style.background=C.bg} onMouseLeave={e=>e.currentTarget.style.background=C.card}>
+                  <div style={{width:34,height:34,borderRadius:7,background:prioColor(acc.priority)+"18",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                    <span style={{fontSize:13,fontWeight:500,color:prioColor(acc.priority),fontFamily:"monospace"}}>{acc._s}</span>
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:500,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{acc.name}</div>
+                    <div style={{fontSize:11,color:C.sub}}>{acc.site}</div>
+                  </div>
+                  <div style={{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"flex-end"}}>
+                    {opps.filter(o=>o.status==="none").length>0&&<Pill color={C.blue} small>{opps.filter(o=>o.status==="none").length} gaps</Pill>}
+                    {opps.filter(o=>o.status==="competitor").length>0&&<Pill color={C.amber} small>{opps.filter(o=>o.status==="competitor").length} comp.</Pill>}
+                    {!acc.lastVisit&&<Pill color={C.red} small>no visit</Pill>}
+                    {d&&d>60&&<Pill color={C.red} small>{d}d</Pill>}
+                    {acc.meetings?.length>0&&<Pill color={C.violet} small>{acc.meetings.length} mtg</Pill>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+        <Card>
+          <SL>Gaps by instrument</SL>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {instrGaps.map(d=>(
+              <div key={d.key}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                  <span style={{fontSize:11,color:C.sub}}>{d.label}</span>
+                  <span style={{fontSize:10,fontFamily:"monospace",color:C.sub}}>{d.gaps+d.comp}</span>
+                </div>
+                <div style={{height:7,borderRadius:3,background:C.bg,overflow:"hidden"}}>
+                  <div style={{display:"flex",height:"100%"}}>
+                    {d.comp>0&&<div style={{width:`${(d.comp/total)*100}%`,background:C.amber,borderRadius:"3px 0 0 3px"}}/>}
+                    {d.gaps>0&&<div style={{width:`${(d.gaps/total)*100}%`,background:C.blue+"90"}}/>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{marginTop:14,display:"flex",gap:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:8,height:8,borderRadius:2,background:C.amber}}/><span style={{fontSize:10,color:C.sub}}>competitor</span></div>
+            <div style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:8,height:8,borderRadius:2,background:C.blue+"90"}}/><span style={{fontSize:10,color:C.sub}}>gap</span></div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ─── ACCOUNTS LIST ────────────────────────────────────────────────────────────
+function AccountsList({accounts,onSelect}) {
+  const [q,setQ] = useState("");
+  const filtered = accounts.filter(a=>[a.name,a.site,a.type].some(f=>f.toLowerCase().includes(q.toLowerCase())));
+  return (
+    <div style={{padding:28,maxWidth:1100}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <div>
+          <h1 style={{fontSize:20,fontWeight:500,color:C.text}}>Pharmaceutical accounts</h1>
+          <p style={{fontSize:12,color:C.sub,marginTop:3}}>{filtered.length} accounts</p>
+        </div>
+        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search..." style={{padding:"7px 12px",borderRadius:8,border:`1px solid ${C.border}`,fontSize:13,width:200,outline:"none",color:C.text}}/>
+      </div>
+      <Card style={{padding:0,overflow:"hidden"}}>
+        <div style={{display:"grid",gridTemplateColumns:"200px 130px 1fr 90px 100px",padding:"9px 16px",background:C.bg,borderBottom:`1px solid ${C.border}`,fontSize:10,fontWeight:600,color:C.sub,letterSpacing:0.5}}>
+          <span>ACCOUNT</span><span>LOCATION</span><span>INSTRUMENTS</span><span>PRIORITY</span><span>LAST VISIT</span>
+        </div>
+        {filtered.map((acc,i)=>{
+          const d=daysAgo(acc.lastVisit);
+          return <div key={acc.id} onClick={()=>onSelect(acc.id)} style={{display:"grid",gridTemplateColumns:"200px 130px 1fr 90px 100px",padding:"12px 16px",borderBottom:i<filtered.length-1?`1px solid ${C.border}`:"none",cursor:"pointer",alignItems:"center",transition:"background 0.1s"}}
+            onMouseEnter={e=>e.currentTarget.style.background=C.bg} onMouseLeave={e=>e.currentTarget.style.background=C.card}>
+            <div><div style={{fontSize:13,fontWeight:500,color:C.text}}>{acc.name}</div><div style={{fontSize:11,color:C.sub,marginTop:1}}>{acc.type}</div></div>
+            <div style={{fontSize:12,color:C.sub}}>{acc.site}</div>
+            <IG instruments={acc.instruments} compact={true}/>
+            <Pill color={prioColor(acc.priority)} small>{prioLabel(acc.priority)}</Pill>
+            <div>{!acc.lastVisit?<Pill color={C.red} small>no visit</Pill>:<span style={{fontSize:11,color:d>60?C.amber:C.sub,fontFamily:"monospace"}}>{d}d ago</span>}</div>
+          </div>;
+        })}
+      </Card>
+    </div>
+  );
+}
+
+// ─── MEETING RECORDER ────────────────────────────────────────────────────────
+function MeetingRecorder({account,apiKey,onSaveMeeting}) {
+  const [meetings,setMeetings] = useState(account.meetings||[]);
+  const [mode,setMode] = useState("list");
+  const [sel,setSel] = useState(null);
+  const [title,setTitle] = useState("");
+  const [attendees,setAttendees] = useState("");
+  const [transcript,setTranscript] = useState("");
+  const [recState,setRecState] = useState("idle"); // idle | recording | stopped
+  const [recMsg,setRecMsg] = useState("");
+  const [analysis,setAnalysis] = useState(null);
+  const [busy,setBusy] = useState(false);
+  const recRef = useRef(null);
+  const finalRef = useRef("");
+
+  function startRecording() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      setRecMsg("⚠ SpeechRecognition not supported in this browser. Use Chrome or Edge, or paste the transcript manually.");
+      return;
+    }
+    finalRef.current = "";
+    setTranscript("");
+    try {
+      const r = new SR();
+      r.continuous = true;
+      r.interimResults = true;
+      r.lang = "en-US";
+      r.maxAlternatives = 1;
+
+      r.onstart = () => {
+        setRecState("recording");
+        setRecMsg("Microphone active — speak clearly.");
+      };
+      r.onresult = (e) => {
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            finalRef.current += e.results[i][0].transcript + " ";
+          } else {
+            interim += e.results[i][0].transcript;
+          }
+        }
+        setTranscript(finalRef.current + interim);
+      };
+      r.onerror = (e) => {
+        setRecState("idle");
+        if (e.error === "not-allowed") {
+          setRecMsg("⚠ Microphone access denied. Allow microphone in browser settings and try again.");
+        } else if (e.error === "no-speech") {
+          setRecMsg("No speech detected. Keep speaking or check your microphone.");
+        } else {
+          setRecMsg("⚠ Error: " + e.error + ". Try restarting the recording.");
+        }
+      };
+      r.onend = () => {
+        setRecState("stopped");
+        setRecMsg("Recording stopped. Review transcript then click Analyze.");
+        recRef.current = null;
+      };
+      recRef.current = r;
+      r.start();
+    } catch(e) {
+      setRecMsg("⚠ Could not start: " + e.message);
+    }
+  }
+
+  function stopRecording() {
+    if (recRef.current) {
+      recRef.current.stop();
+      recRef.current = null;
+    }
+    setRecState("stopped");
+    setRecMsg("Recording stopped. Review transcript then click Analyze.");
+  }
+
+  function analyze() {
+    if (!transcript.trim()) { setRecMsg("⚠ Provide a transcript first."); return; }
+    if (!apiKey) { setRecMsg("⚠ No API key set. Click ⚙ API Settings in the sidebar."); return; }
+    setBusy(true); setAnalysis(null);
+    const ctx = {
+      name: account.name,
+      instruments: Object.fromEntries(INSTRUMENTS.map(d=>[d.label, account.instruments[d.key].status])),
+      contacts: Object.values(account.departments).flatMap(d=>d.contacts||[]).map(c=>c.name),
+    };
+    callAI(apiKey,
+      "You are a Sievers sales analyst. Extract insights from meeting transcripts. Respond with valid JSON only — no markdown, no code fences.",
+      `Meeting transcript from visit to "${account.name}".\nCONTEXT: ${JSON.stringify(ctx)}\nAVAILABLE INSTRUMENTS: ${INSTRUMENTS.map(d=>d.label).join(", ")}\n\nTRANSCRIPT:\n${transcript}\n\nReturn JSON with these exact keys:\n{"summary":"string","overallSentiment":"positive|neutral|negative","keyFindings":[{"department":"string","finding":"string"}],"instrumentsDiscussed":[{"instrument":"string","context":"string","opportunity":"string"}],"newContacts":[{"name":"string","role":"string","department":"string","email":"string"}],"actionItems":[{"action":"string","owner":"string","deadline":"string"}],"profileUpdates":[{"field":"string","currentValue":"string","suggestedValue":"string","reason":"string"}],"competitiveInsights":"string","nextSteps":"string"}`
+    ).then(raw=>{
+      try {
+        const clean = raw.replace(/^```json\s*/,"").replace(/\s*```$/,"").trim();
+        setAnalysis(JSON.parse(clean));
+      } catch(e) {
+        setAnalysis({_err:"JSON parse error: "+e.message+"\n\nRaw response:\n"+raw.slice(0,300)});
+      }
+      setBusy(false);
+    }).catch(e=>{
+      setAnalysis({_err:"API error: "+e.message});
+      setBusy(false);
+    });
+  }
+
+  function saveMeeting() {
+    const m = {
+      id: Date.now(),
+      title: title || "Meeting " + new Date().toLocaleDateString("en-US"),
+      attendees: attendees.split(",").map(s=>s.trim()).filter(Boolean),
+      date: new Date().toISOString().split("T")[0],
+      transcript, analysis,
+    };
+    const upd = [...meetings, m];
+    setMeetings(upd);
+    onSaveMeeting(upd);
+    setMode("list");
+    setTitle(""); setAttendees(""); setTranscript(""); setAnalysis(null); setRecMsg(""); setRecState("idle");
+    finalRef.current = "";
+  }
+
+  if (mode==="new") return (
+    <div>
+      <button onClick={()=>setMode("list")} style={{color:C.sub,fontSize:12,marginBottom:16,cursor:"pointer",border:"none",background:"none"}}>← Back to meetings</button>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+        <div><div style={{fontSize:11,color:C.sub,marginBottom:5}}>Meeting title</div><TInput value={title} onChange={setTitle} placeholder="e.g. QC Lab visit — April 2025"/></div>
+        <div><div style={{fontSize:11,color:C.sub,marginBottom:5}}>Attendees (comma-separated)</div><TInput value={attendees} onChange={setAttendees} placeholder="e.g. Mike Gray, Velda Pomales"/></div>
+      </div>
+
+      <div style={{fontSize:11,color:C.sub,marginBottom:8}}>Transcript</div>
+
+      {/* Recording controls */}
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,padding:"10px 14px",borderRadius:8,background:recState==="recording"?C.redDim:C.bg,border:`1px solid ${recState==="recording"?C.red+"40":C.border}`}}>
+        {recState==="idle"&&(
+          <button onClick={startRecording} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 16px",borderRadius:8,background:C.green,color:"#fff",border:"none",fontSize:12,fontWeight:500,cursor:"pointer",flexShrink:0}}>
+            <span style={{fontSize:16}}>●</span> Start Recording
+          </button>
+        )}
+        {recState==="recording"&&(
+          <>
+            <button onClick={stopRecording} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 16px",borderRadius:8,background:C.red,color:"#fff",border:"none",fontSize:12,fontWeight:500,cursor:"pointer",flexShrink:0}}>
+              <span style={{fontSize:14}}>■</span> Stop Recording
+            </button>
+            <div className="rec-pulse" style={{width:10,height:10,borderRadius:"50%",background:C.red,flexShrink:0}}/>
+            <span style={{fontSize:12,color:C.red,fontWeight:500}}>Recording in progress...</span>
+          </>
+        )}
+        {recState==="stopped"&&(
+          <button onClick={startRecording} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 16px",borderRadius:8,background:C.green,color:"#fff",border:"none",fontSize:12,fontWeight:500,cursor:"pointer",flexShrink:0}}>
+            <span style={{fontSize:16}}>●</span> Resume Recording
+          </button>
+        )}
+        {recMsg&&<span style={{fontSize:11,color:recState==="recording"?C.red:C.sub,flex:1}}>{recMsg}</span>}
+      </div>
+
+      <TArea value={transcript} onChange={v=>{setTranscript(v);finalRef.current=v;}} placeholder="Transcript appears here automatically when recording, or paste it manually..." rows={8} style={{marginBottom:12}}/>
+
+      <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+        <Btn onClick={analyze} disabled={busy||!transcript.trim()}>
+          {busy?"Analyzing...":"◈ Analyze with AI"}
+        </Btn>
+        {analysis&&!analysis._err&&(
+          <Btn onClick={saveMeeting} color={C.green}>✓ Save meeting</Btn>
+        )}
+        {transcript&&<Btn outline color={C.sub} onClick={()=>{setTranscript("");finalRef.current="";setRecState("idle");setRecMsg("");}}>Clear transcript</Btn>}
+      </div>
+
+      {analysis&&(
+        analysis._err
+          ? <div style={{fontSize:12,color:C.red,padding:12,background:C.redDim,borderRadius:8,whiteSpace:"pre-wrap"}}>{analysis._err}</div>
+          : <AnalysisPanel analysis={analysis}/>
+      )}
+    </div>
+  );
+
+  if (mode==="view"&&sel) return (
+    <div>
+      <button onClick={()=>{setMode("list");setSel(null);}} style={{color:C.sub,fontSize:12,marginBottom:16,cursor:"pointer",border:"none",background:"none"}}>← Back</button>
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:15,fontWeight:500,color:C.text}}>{sel.title}</div>
+        <div style={{fontSize:12,color:C.sub}}>{sel.date} · {sel.attendees?.join(", ")||"—"}</div>
+      </div>
+      {sel.analysis&&!sel.analysis._err&&<AnalysisPanel analysis={sel.analysis}/>}
+      {sel.transcript&&<Card style={{marginTop:14}}><SL>Full transcript</SL><div style={{fontSize:12,color:C.text,whiteSpace:"pre-wrap",lineHeight:1.7,maxHeight:220,overflow:"auto"}}>{sel.transcript}</div></Card>}
+    </div>
+  );
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <SL>Meetings on record</SL>
+        <Btn onClick={()=>setMode("new")}>+ New meeting</Btn>
+      </div>
+      {meetings.length===0&&(
+        <div style={{textAlign:"center",padding:"32px 0",color:C.sub,lineHeight:2,fontSize:12}}>
+          No meetings recorded yet.<br/>
+          Click <strong>+ New meeting</strong> to record via microphone or paste a transcript.
+        </div>
+      )}
+      {meetings.map(m=>(
+        <div key={m.id} onClick={()=>{setSel(m);setMode("view");}} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:8,border:`1px solid ${C.border}`,marginBottom:8,cursor:"pointer",transition:"background 0.1s"}}
+          onMouseEnter={e=>e.currentTarget.style.background=C.bg} onMouseLeave={e=>e.currentTarget.style.background=C.card}>
+          <div style={{width:34,height:34,borderRadius:8,background:C.violetDim,display:"flex",alignItems:"center",justifyContent:"center",color:C.violet,fontSize:16,flexShrink:0}}>◉</div>
+          <div style={{flex:1}}><div style={{fontSize:13,fontWeight:500,color:C.text}}>{m.title}</div><div style={{fontSize:11,color:C.sub}}>{m.date} · {m.attendees?.join(", ")||"—"}</div></div>
+          {m.analysis?.overallSentiment&&<Pill color={m.analysis.overallSentiment==="positive"?C.green:m.analysis.overallSentiment==="negative"?C.red:C.gray} small>{m.analysis.overallSentiment}</Pill>}
+          {m.analysis?.actionItems&&<Pill color={C.amber} small>{m.analysis.actionItems.length} actions</Pill>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── ANALYSIS PANEL ──────────────────────────────────────────────────────────
+function AnalysisPanel({analysis}) {
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
+      <Card style={{background:"#F0FDF4",border:`1px solid ${C.green}40`}}>
+        <SL>Meeting summary</SL>
+        <div style={{fontSize:13,color:C.text,lineHeight:1.7}}>{analysis.summary}</div>
+        {analysis.overallSentiment&&<div style={{marginTop:8}}><Pill color={analysis.overallSentiment==="positive"?C.green:analysis.overallSentiment==="negative"?C.red:C.gray}>Sentiment: {analysis.overallSentiment}</Pill></div>}
+      </Card>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        {analysis.keyFindings?.length>0&&<Card><SL>Key findings</SL>{analysis.keyFindings.map((f,i)=><div key={i} style={{padding:"7px 0",borderBottom:`1px solid ${C.border}`}}><div style={{fontSize:11,color:C.blue,fontWeight:500}}>{f.department}</div><div style={{fontSize:12,color:C.text,lineHeight:1.5}}>{f.finding}</div></div>)}</Card>}
+        {analysis.actionItems?.length>0&&<Card><SL>Action items</SL>{analysis.actionItems.map((x,i)=><div key={i} style={{padding:"7px 0",borderBottom:`1px solid ${C.border}`}}><div style={{fontSize:12,color:C.text,lineHeight:1.5}}>{x.action}</div><div style={{fontSize:11,color:C.sub}}>{x.owner} · {x.deadline}</div></div>)}</Card>}
+      </div>
+      {analysis.instrumentsDiscussed?.length>0&&<Card><SL>Instruments discussed</SL>{analysis.instrumentsDiscussed.map((d,i)=><div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",padding:"7px 0",borderBottom:`1px solid ${C.border}`}}><Pill color={C.blue}>{d.instrument}</Pill><div style={{flex:1}}><div style={{fontSize:12,color:C.text}}>{d.context}</div>{d.opportunity&&<div style={{fontSize:11,color:C.green,marginTop:2}}>↳ {d.opportunity}</div>}</div></div>)}</Card>}
+      {analysis.profileUpdates?.length>0&&<Card style={{border:`1px solid ${C.amber}40`,background:C.amberDim}}><SL>Suggested profile updates</SL><div style={{fontSize:11,color:C.amber,marginBottom:10}}>Apply to account if confirmed:</div>{analysis.profileUpdates.map((u,i)=><div key={i} style={{padding:"8px 10px",background:C.card,borderRadius:8,marginBottom:6,border:`1px solid ${C.border}`}}><div style={{fontSize:11,fontWeight:500,color:C.text}}>{u.field}</div><div style={{fontSize:11,color:C.sub}}>Current: {u.currentValue||"empty"} → <span style={{color:C.blue}}>{u.suggestedValue}</span></div><div style={{fontSize:11,color:C.sub,marginTop:2}}>{u.reason}</div></div>)}</Card>}
+      {analysis.newContacts?.length>0&&<Card><SL>New contacts identified</SL>{analysis.newContacts.map((c,i)=><div key={i} style={{padding:"7px 0",borderBottom:`1px solid ${C.border}`}}><div style={{fontSize:13,fontWeight:500,color:C.text}}>{c.name} — {c.role}</div><div style={{fontSize:11,color:C.sub}}>{c.department}{c.email?" · "+c.email:""}</div></div>)}</Card>}
+      {analysis.competitiveInsights&&<Card style={{border:`1px solid ${C.amber}40`}}><SL>Competitive insights</SL><div style={{fontSize:12,color:C.text,lineHeight:1.7}}>{analysis.competitiveInsights}</div></Card>}
+      {analysis.nextSteps&&<Card style={{border:`1px solid ${C.green}40`,background:"#F0FDF4"}}><SL>Recommended next steps</SL><div style={{fontSize:12,color:C.text,lineHeight:1.7}}>{analysis.nextSteps}</div></Card>}
+    </div>
+  );
+}
+
+// ─── VISIT BRIEF MODAL ───────────────────────────────────────────────────────
+function VisitBriefModal({account,apiKey,onClose}) {
+  const [st,setSt] = useState("idle");
+  const [txt,setTxt] = useState("");
+  function generate() {
+    if (!apiKey) { setSt("error"); setTxt("No API key. Click ⚙ API Settings in the sidebar."); return; }
+    setSt("loading"); setTxt("");
+    const gaps=INSTRUMENTS.filter(d=>account.instruments[d.key].status==="none").map(d=>d.label);
+    const comp=INSTRUMENTS.filter(d=>account.instruments[d.key].status==="competitor").map(d=>`${d.label} (${account.instruments[d.key].brand})`);
+    const siev=INSTRUMENTS.filter(d=>account.instruments[d.key].status==="sievers").map(d=>d.label);
+    callAI(apiKey,
+      "Expert Sievers pharma sales strategist. Generate concise, actionable visit briefs in English.",
+      `Visit brief for: ${account.name} | ${account.site} | ${account.type}\nInstalled: ${siev.join(", ")||"none"}\nCompetitor: ${comp.join(", ")||"none"}\nGaps: ${gaps.join(", ")||"none"}\nConsumables: ${JSON.stringify(account.consumables)}\nServices: ${JSON.stringify(account.services)}\nProjects: ${JSON.stringify(account.projects)}\nMeetings: ${account.meetings?.length||0}\nNotes: ${account.notes}\nLast visit: ${account.lastVisit||"never"}\n\nStructure:\n🎯 TOP OPPORTUNITIES\n🔒 PROTECT (SIEVERS INSTALLED)\n⚔️ COMPETITIVE SITUATION\n👥 KEY CONTACTS & APPROACH BY DEPT\n📦 CONSUMABLES & SERVICES TO OFFER\n✅ 3 CONCRETE NEXT STEPS\n\nMax 380 words.`
+    ).then(out=>{setTxt(out);setSt("done");}).catch(e=>{setTxt("Error: "+e.message);setSt("error");});
+  }
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:999,padding:20}}>
+      <div style={{background:C.card,borderRadius:16,width:"100%",maxWidth:620,maxHeight:"90vh",overflow:"auto",border:`1px solid ${C.border}`}}>
+        <div style={{padding:"16px 20px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div><div style={{fontSize:14,fontWeight:500,color:C.text}}>AI visit brief</div><div style={{fontSize:11,color:C.sub}}>{account.name} · {account.site}</div></div>
+          <button onClick={onClose} style={{color:C.sub,fontSize:18,cursor:"pointer",border:"none",background:"none"}}>✕</button>
+        </div>
+        <div style={{padding:20}}>
+          {st==="idle"&&<div style={{textAlign:"center",padding:"28px 0"}}><div style={{fontSize:32,marginBottom:12}}>◈</div><div style={{fontSize:13,fontWeight:500,color:C.text,marginBottom:8}}>AI-powered visit briefing</div><div style={{fontSize:12,color:C.sub,marginBottom:22,lineHeight:1.7}}>Analyzes account profile and meeting history, then generates a pre-visit action brief with opportunities, competitive situation, and next steps.</div><Btn onClick={generate}>Generate brief</Btn></div>}
+          {st==="loading"&&<div style={{textAlign:"center",padding:"28px 0",color:C.sub,fontSize:13}}>Analyzing account data and generating brief...</div>}
+          {(st==="done"||st==="error")&&<div>
+            <div style={{fontSize:12,color:C.text,lineHeight:1.9,whiteSpace:"pre-wrap",background:C.bg,padding:16,borderRadius:10,border:`1px solid ${C.border}`}}>{txt}</div>
+            <div style={{display:"flex",gap:8,marginTop:14}}>
+              <Btn outline onClick={generate} color={C.sub}>Regenerate</Btn>
+              <Btn onClick={()=>navigator.clipboard&&navigator.clipboard.writeText(txt)}>Copy</Btn>
+            </div>
+          </div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ACCOUNT DETAIL ───────────────────────────────────────────────────────────
+function AccountDetail({account,apiKey,onBack,onUpdate}) {
+  const [tab,setTab] = useState("overview");
+  const [brief,setBrief] = useState(false);
+  const opps=getOpps(account), sc=visitScore(account), d=daysAgo(account.lastVisit);
+  const qc=account.departments?.qc_lab||{};
+  const cv=account.departments?.cv_lab||{};
+  const rd=account.departments?.rd||{};
+  const prod=account.departments?.producao||{};
+  const eclipse=account.instruments.eclipse;
+  const tabs=[
+    {id:"overview",l:"Overview"},{id:"qc",l:"QC Lab"},{id:"cv",l:"Cleaning Val."},
+    {id:"endo",l:"Endotoxins"},{id:"meetings",l:"Meetings"+(account.meetings?.length>0?" ("+account.meetings.length+")":""),hi:true},
+    {id:"projects",l:"Projects"},{id:"contacts",l:"Contacts"},
+  ];
+  return (
+    <div style={{padding:28,maxWidth:1000}}>
+      <button onClick={onBack} style={{color:C.sub,fontSize:12,marginBottom:18,cursor:"pointer",border:"none",background:"none"}}>← Back</button>
+      <Card style={{marginBottom:16}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
+              <h2 style={{fontSize:18,fontWeight:500,color:C.text}}>{account.name}</h2>
+              <Pill color={prioColor(account.priority)}>{prioLabel(account.priority)}</Pill>
+              {account.rtt&&<Pill color={C.blue}>RTT presented</Pill>}
+            </div>
+            <div style={{fontSize:12,color:C.sub}}>{account.site} · {account.type}</div>
+            {account.notes&&<div style={{marginTop:10,fontSize:12,color:C.text,background:C.amberDim,padding:"8px 12px",borderRadius:6,borderLeft:`3px solid ${C.amber}`,lineHeight:1.6}}>{account.notes}</div>}
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"center",marginLeft:16}}>
+            <div style={{textAlign:"center",background:prioColor(account.priority)+"15",borderRadius:10,padding:"8px 12px"}}>
+              <div style={{fontSize:22,fontWeight:500,color:prioColor(account.priority),fontFamily:"monospace"}}>{sc}</div>
+              <div style={{fontSize:9,color:C.sub}}>score</div>
+            </div>
+            <Btn onClick={()=>setBrief(true)}>◈ Visit brief</Btn>
+          </div>
+        </div>
+        <div style={{marginTop:16}}><SL>Instruments</SL><IG instruments={account.instruments}/></div>
+        {opps.length>0&&<div style={{marginTop:14}}><SL>Opportunities</SL><div style={{display:"flex",gap:5,flexWrap:"wrap"}}>{opps.map((op,i)=><Pill key={i} color={op.status==="competitor"?C.amber:op.status==="unknown"?C.gray:C.blue}>{op.status==="none"?"+ "+op.label:op.status==="competitor"?"⚠ "+op.label+" — "+op.brand:"? "+op.label}</Pill>)}</div></div>}
+        <div style={{marginTop:14,display:"flex",gap:16}}>
+          {d!==null&&<span style={{fontSize:11,color:d>60?C.amber:C.sub}}>Last visit: {d}d ago ({account.lastVisit})</span>}
+          {!account.lastVisit&&<Pill color={C.red}>Never visited</Pill>}
+        </div>
+      </Card>
+      <div style={{display:"flex",gap:2,borderBottom:`1px solid ${C.border}`,marginBottom:16}}>
+        {tabs.map(t=>{const active=tab===t.id,col=active?(t.hi?C.violet:C.blue):C.sub;return<button key={t.id} onClick={()=>setTab(t.id)} style={{padding:"9px 14px",fontSize:12,cursor:"pointer",border:"none",background:"none",color:col,fontWeight:active?500:400,borderBottom:`2px solid ${active?(t.hi?C.violet:C.blue):"transparent"}`,marginBottom:-1}}>{t.l}</button>;})}
+      </div>
+      {tab==="overview"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+        <Card><SL>Consumables</SL><IR label="Vials — vendor" value={account.consumables?.vials?.vendor}/><IR label="Vials — type" value={account.consumables?.vials?.type}/><IR label="Standards — vendor" value={account.consumables?.standards?.vendor}/><IR label="Standards" value={account.consumables?.standards?.desc}/>{!account.consumables?.vials?.vendor&&<div style={{fontSize:12,color:C.sub}}>No consumables data.</div>}</Card>
+        <Card><SL>Services</SL><IR label="Vendor" value={account.services?.vendor}/><IR label="Description" value={account.services?.desc}/>{!account.services?.vendor&&<div style={{fontSize:12,color:C.sub}}>No services data.</div>}</Card>
+      </div>}
+      {tab==="qc"&&<Card><SL>QC Lab — WFI / purified water</SL><IR label="Water type" value={qc.water_type}/><IR label="Usage" value={qc.uso}/><IR label="Loops" value={qc.loops} mono/><IR label="Points of use" value={qc.pontos_uso} mono/><IR label="Ideal TOC level" value={qc.nivel_ideal} mono/><IR label="Alarm level" value={qc.nivel_alarme} mono/><IR label="TOC samples/month" value={qc.amostras_toc} mono/><IR label="Cond. samples/month" value={qc.amostras_cond} mono/><IR label="TOC in batch record?" value={qc.dado_lote===true?"Yes":qc.dado_lote===false?"No":undefined}/><IR label="JP-16 compliance?" value={qc.jp16===true?"Yes":qc.jp16===false?"No":undefined}/>{qc.contacts?.length>0&&<div style={{marginTop:14}}><SL>QC contacts</SL>{qc.contacts.map((c,i)=><CC key={i} c={c}/>)}</div>}</Card>}
+      {tab==="cv"&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <Card><SL>CV Lab (QC)</SL><IR label="Instrument vendor" value={cv.vendor}/><IR label="Vendor type" value={cv.vendor_type}/><IR label="TOC rinse criterion" value={cv.criterio_toc}/><IR label="Ideal RSD" value={cv.rsd_ideal}/><IR label="CV samples/month" value={cv.amostras} mono/>{cv.contacts?.map((c,i)=><CC key={i} c={c}/>)}{!cv.vendor&&!cv.contacts?.length&&<div style={{fontSize:12,color:C.sub}}>No CV Lab data.</div>}</Card>
+        <Card><SL>R&D / Process Dev.</SL>{rd.contacts?.length>0?rd.contacts.map((c,i)=><CC key={i} c={c}/>):<div style={{fontSize:12,color:C.sub}}>No R&D data.</div>}</Card>
+      </div>}
+      {tab==="endo"&&<Card><SL>Endotoxin — Eclipse</SL><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}><Dot status={eclipse.status} size={11}/><span style={{fontSize:13,fontWeight:500,color:statusColor(eclipse.status)}}>{eclipse.status==="sievers"?"Sievers Eclipse":eclipse.status==="competitor"?"Competitor — "+eclipse.brand:eclipse.status==="unknown"?"Unknown":"No instrument"}</span></div>{eclipse.status==="none"&&<div style={{background:C.blueDim,padding:12,borderRadius:8,fontSize:12,color:C.blue,border:`1px solid ${C.blue}30`,lineHeight:1.6}}>Opportunity: no endotoxin system. Pitch Eclipse as integrated Sievers solution alongside TOC.</div>}{eclipse.status==="competitor"&&<div style={{background:C.amberDim,padding:12,borderRadius:8,fontSize:12,color:C.amber,border:`1px solid ${C.amber}30`,lineHeight:1.6}}>Competitor: {eclipse.brand}. Migration angle: Eclipse + TOC single vendor + 21 CFR Part 11 audit trail.</div>}</Card>}
+      {tab==="meetings"&&<Card><MeetingRecorder account={account} apiKey={apiKey} onSaveMeeting={m=>onUpdate({...account,meetings:m})}/></Card>}
+      {tab==="projects"&&<Card><SL>Active projects</SL>{account.projects?.length>0?account.projects.map((p,i)=><div key={i} style={{padding:"10px 12px",background:C.blueDim,borderRadius:8,border:`1px solid ${C.blue}30`,marginBottom:8}}><div style={{fontSize:13,fontWeight:500,color:C.text}}>{p.name}</div>{p.status&&<div style={{fontSize:11,color:C.sub,marginTop:4}}>{p.status}</div>}</div>):<div style={{fontSize:12,color:C.sub}}>No projects registered.</div>}</Card>}
+      {tab==="contacts"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>{[{l:"QC Lab / WFI",c:qc.contacts||[]},{l:"Cleaning validation",c:cv.contacts||[]},{l:"R&D / Process Dev.",c:rd.contacts||[]},{l:"Production",c:prod.contacts||[]}].map(({l,c})=><Card key={l}><SL>{l}</SL>{c.length>0?c.map((x,i)=><CC key={i} c={x}/>):<div style={{fontSize:12,color:C.sub}}>No contacts.</div>}</Card>)}</div>}
+      {brief&&<VisitBriefModal account={account} apiKey={apiKey} onClose={()=>setBrief(false)}/>}
+    </div>
+  );
+}
+
+// ─── SIEVERS INTEL ────────────────────────────────────────────────────────────
+function SieversIntel({intel,onUpdate}) {
+  const [d,setD] = useState(intel);
+  const [saved,setSaved] = useState(false);
+  const upd = (k,v) => { setD(p=>({...p,[k]:v})); setSaved(false); };
+  const updArr = (k,i,f,v) => { setD(p=>({...p,[k]:p[k].map((x,j)=>j===i?{...x,[f]:v}:x)})); setSaved(false); };
+  const save = () => { onUpdate({...d,updatedAt:new Date().toISOString()}); setSaved(true); };
+  return (
+    <div style={{padding:28,maxWidth:960}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22}}>
+        <div><h1 style={{fontSize:20,fontWeight:500,color:C.text}}>Sievers Intelligence</h1><p style={{fontSize:12,color:C.sub,marginTop:3}}>Internal input — product roadmap, competitive landscape, strategic priorities</p></div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          {d.updatedAt&&<span style={{fontSize:11,color:C.sub}}>Saved: {new Date(d.updatedAt).toLocaleString("en-US")}</span>}
+          <button onClick={save} style={{padding:"8px 16px",borderRadius:8,background:saved?C.green:C.blue,color:"#fff",border:"none",fontSize:12,fontWeight:500,cursor:"pointer"}}>{saved?"✓ Saved":"Save changes"}</button>
+        </div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:16}}>
+        <Card><SL>Product roadmap & pricing</SL>{d.products.map((p,i)=><div key={i} style={{display:"grid",gridTemplateColumns:"140px 1fr 1fr 1fr",gap:10,padding:"10px 0",borderBottom:`1px solid ${C.border}`,alignItems:"flex-start"}}><div style={{fontSize:12,fontWeight:500,color:C.blue,paddingTop:4}}>{p.instrument}</div><div><div style={{fontSize:10,color:C.sub,marginBottom:4}}>ROADMAP</div><TArea value={p.roadmap} onChange={v=>updArr("products",i,"roadmap",v)} rows={2}/></div><div><div style={{fontSize:10,color:C.sub,marginBottom:4}}>PRICING</div><TInput value={p.pricing} onChange={v=>updArr("products",i,"pricing",v)}/></div><div><div style={{fontSize:10,color:C.sub,marginBottom:4}}>PROMOTIONS</div><TArea value={p.promos} onChange={v=>updArr("products",i,"promos",v)} rows={2}/></div></div>)}</Card>
+        <Card><SL>Competitive landscape</SL>{d.competitive.map((c,i)=><div key={i} style={{display:"grid",gridTemplateColumns:"180px 1fr",gap:10,padding:"10px 0",borderBottom:`1px solid ${C.border}`,alignItems:"flex-start"}}><TInput value={c.competitor} onChange={v=>updArr("competitive",i,"competitor",v)} placeholder="Competitor name"/><TArea value={c.notes} onChange={v=>updArr("competitive",i,"notes",v)} rows={2} placeholder="Counter-positioning, weaknesses, talking points..."/></div>)}</Card>
+        <Card><SL>Regulatory updates</SL>{d.regulatory.map((r,i)=><div key={i} style={{display:"grid",gridTemplateColumns:"200px 1fr",gap:10,padding:"10px 0",borderBottom:`1px solid ${C.border}`,alignItems:"flex-start"}}><TInput value={r.update} onChange={v=>updArr("regulatory",i,"update",v)} placeholder="Regulation / standard"/><TArea value={r.notes} onChange={v=>updArr("regulatory",i,"notes",v)} rows={2} placeholder="How to leverage in account conversations..."/></div>)}</Card>
+        <Card><SL>Strategic priorities by segment</SL>{d.strategic.map((s,i)=><div key={i} style={{display:"grid",gridTemplateColumns:"200px 110px 1fr",gap:10,padding:"10px 0",borderBottom:`1px solid ${C.border}`,alignItems:"flex-start"}}><TInput value={s.segment} onChange={v=>updArr("strategic",i,"segment",v)} placeholder="Segment"/><select value={s.priority} onChange={e=>updArr("strategic",i,"priority",e.target.value)} style={{padding:"8px 10px",borderRadius:8,border:`1px solid ${C.border}`,fontSize:12,color:C.text,outline:"none"}}><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select><TArea value={s.notes} onChange={v=>updArr("strategic",i,"notes",v)} rows={2} placeholder="Pitch, key instruments, talking points..."/></div>)}</Card>
+        <Card><SL>General intelligence & field notes</SL><TArea value={d.notes} onChange={v=>upd("notes",v)} rows={4} placeholder="Market signals, conference insights, distributor intel..."/></Card>
+      </div>
+    </div>
+  );
+}
+
+// ─── CONFLICT REPORTS ────────────────────────────────────────────────────────
+function ConflictReports({accounts,intel,apiKey}) {
+  const [selId,setSelId] = useState("");
+  const [report,setReport] = useState("");
+  const [st,setSt] = useState("idle");
+  const [fieldNotes,setFieldNotes] = useState("");
+  const acc = accounts.find(a=>a.id===Number(selId));
+  function generate() {
+    if (!acc) return;
+    if (!apiKey) { setReport("No API key. Click ⚙ API Settings in the sidebar."); setSt("error"); return; }
+    setSt("loading"); setReport("");
+    const siev=INSTRUMENTS.filter(d=>acc.instruments[d.key].status==="sievers").map(d=>d.label);
+    const comp=INSTRUMENTS.filter(d=>acc.instruments[d.key].status==="competitor").map(d=>`${d.label} (${acc.instruments[d.key].brand})`);
+    const gaps=INSTRUMENTS.filter(d=>acc.instruments[d.key].status==="none").map(d=>d.label);
+    const mtg=(acc.meetings||[]).map(m=>({date:m.date,summary:m.analysis?.summary||"No summary",competitive:m.analysis?.competitiveInsights||""}));
+    callAI(apiKey,
+      "Senior Sievers business analyst. Cross-reference field account data with internal Sievers intelligence to produce structured conflict and opportunity reports.",
+      `CONFLICT ANALYSIS — ${acc.name} (${acc.site})\n\nFIELD DATA:\n- Sievers installed: ${siev.join(", ")||"none"}\n- Competitor instruments: ${comp.join(", ")||"none"}\n- Gaps: ${gaps.join(", ")||"none"}\n- Priority: ${acc.priority}\n- Last visit: ${acc.lastVisit||"never"}\n- Notes: ${acc.notes}\n- Meetings: ${JSON.stringify(mtg)}\n- Consumables: ${JSON.stringify(acc.consumables)}\n- Services: ${JSON.stringify(acc.services)}\n- Projects: ${JSON.stringify(acc.projects)}\n\nSIEVERS HQ INTELLIGENCE:\n${JSON.stringify({products:intel.products,competitive:intel.competitive,regulatory:intel.regulatory,strategic:intel.strategic})}\n\nADDITIONAL FIELD CONTEXT:\n${fieldNotes||"None"}\n\nGenerate CONFLICT & ALIGNMENT REPORT:\n\n## Executive Summary\n## Alignment with Sievers Strategy\n## Conflicts & Gaps\n## Competitive Threat Assessment\n## Regulatory Leverage Points\n## Recommended Strategic Actions (prioritized)\n## Risk Flags\n\nBe specific.`
+    ).then(out=>{setReport(out);setSt("done");}).catch(e=>{setReport("Error: "+e.message);setSt("error");});
+  }
+  return (
+    <div style={{padding:28,maxWidth:900}}>
+      <div style={{marginBottom:22}}><h1 style={{fontSize:20,fontWeight:500,color:C.text}}>Conflict reports</h1><p style={{fontSize:12,color:C.sub,marginTop:3}}>Cross-reference field data with Sievers Intel to identify conflicts, gaps, and strategic opportunities</p></div>
+      <Card style={{marginBottom:16}}>
+        <SL>Report configuration</SL>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+          <div><div style={{fontSize:11,color:C.sub,marginBottom:5}}>Account</div>
+            <select value={selId} onChange={e=>setSelId(e.target.value)} style={{width:"100%",padding:"8px 11px",borderRadius:8,border:`1px solid ${C.border}`,fontSize:12,color:C.text,outline:"none"}}>
+              <option value="">— select account —</option>
+              {accounts.map(a=><option key={a.id} value={a.id}>{a.name} — {a.site}</option>)}
+            </select>
+          </div>
+          <div><div style={{fontSize:11,color:C.sub,marginBottom:5}}>Intel version</div><div style={{padding:"8px 11px",borderRadius:8,border:`1px solid ${C.border}`,fontSize:12,color:C.sub,background:C.bg}}>{intel.updatedAt?"Saved: "+new Date(intel.updatedAt).toLocaleString("en-US"):"Intel not configured — go to Sievers Intel first"}</div></div>
+        </div>
+        {acc&&<div style={{marginBottom:14}}><IG instruments={acc.instruments}/><div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}><Pill color={prioColor(acc.priority)} small>{prioLabel(acc.priority)} priority</Pill>{acc.meetings?.length>0&&<Pill color={C.violet} small>{acc.meetings.length} meetings</Pill>}{!acc.lastVisit&&<Pill color={C.red} small>never visited</Pill>}{acc.projects?.length>0&&<Pill color={C.green} small>{acc.projects.length} projects</Pill>}</div></div>}
+        <div style={{marginBottom:14}}><div style={{fontSize:11,color:C.sub,marginBottom:5}}>Additional field notes</div><TArea value={fieldNotes} onChange={setFieldNotes} rows={3} placeholder="Add recent intel or context for the AI..."/></div>
+        <button onClick={generate} disabled={!acc||st==="loading"} style={{padding:"8px 16px",borderRadius:8,background:!acc||st==="loading"?C.gray:C.violet,color:"#fff",border:"none",fontSize:12,fontWeight:500,cursor:!acc||st==="loading"?"not-allowed":"pointer",opacity:!acc||st==="loading"?0.6:1}}>
+          {st==="loading"?"Generating...":"◉ Generate conflict report"}
+        </button>
+      </Card>
+      {(st==="done"||st==="error")&&report&&<Card>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+          <SL>Report: {acc?.name} — {new Date().toLocaleDateString("en-US")}</SL>
+          <div style={{display:"flex",gap:8}}>
+            <Btn outline onClick={generate} color={C.sub}>Regenerate</Btn>
+            <button onClick={()=>navigator.clipboard&&navigator.clipboard.writeText(report)} style={{padding:"8px 16px",borderRadius:8,background:C.violet,color:"#fff",border:"none",fontSize:12,fontWeight:500,cursor:"pointer"}}>Copy report</button>
+          </div>
+        </div>
+        <div style={{fontSize:12,color:C.text,lineHeight:1.9,whiteSpace:"pre-wrap",background:C.bg,padding:20,borderRadius:10,border:`1px solid ${C.border}`}}>{report}</div>
+      </Card>}
+    </div>
+  );
+}
+
+// ─── APP ROOT ─────────────────────────────────────────────────────────────────
+function App() {
+  const [view,setView] = useState("dashboard");
+  const [selId,setSelId] = useState(null);
+  const [accounts,setAccounts] = useState(SEED_ACCOUNTS);
+  const [intel,setIntel] = useState(SEED_INTEL);
+  const [apiKey,setApiKey] = useState(localStorage.getItem("sievers_api_key")||"");
+  const [showApiModal,setShowApiModal] = useState(!localStorage.getItem("sievers_api_key"));
+  const sel = accounts.find(a=>a.id===selId);
+
+  function pick(id) { setSelId(id); setView("detail"); }
+  function back() { setSelId(null); setView("accounts"); }
+  function nav(v) { setSelId(null); setView(v); }
+  function saveKey(k) { setApiKey(k); setShowApiModal(false); }
+
+  return (
+    <div style={{display:"flex",height:"100vh",overflow:"hidden"}}>
+      {showApiModal&&<ApiKeyModal onSave={saveKey}/>}
+      <Sidebar view={view} setView={nav} onSettings={()=>setShowApiModal(true)}/>
+      <main style={{flex:1,overflow:"auto",background:C.bg}}>
+        {view==="dashboard"&&<Dashboard accounts={accounts} onSelect={pick}/>}
+        {view==="accounts"&&<AccountsList accounts={accounts} onSelect={id=>{pick(id);}}/>}
+        {view==="detail"&&sel&&<AccountDetail account={sel} apiKey={apiKey} onBack={back} onUpdate={u=>setAccounts(p=>p.map(a=>a.id===u.id?u:a))}/>}
+        {view==="intel"&&<SieversIntel intel={intel} onUpdate={setIntel}/>}
+        {view==="reports"&&<ConflictReports accounts={accounts} intel={intel} apiKey={apiKey}/>}
+      </main>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
