@@ -507,27 +507,38 @@ function getOpps(acc) {
   })).filter(d => d.status !== "sievers");
 }
 async function callAI(apiKey, system, user) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true"
-    },
-    body: JSON.stringify({
-      model: "claude-3-haiku-20240307",
-      max_tokens: 1200,
-      system,
-      messages: [{
-        role: "user",
-        content: user
-      }]
-    })
-  });
-  if (!res.ok) throw new Error("API error " + res.status);
-  const data = await res.json();
-  return (data.content || []).map(b => b.text || "").join("");
+  const models = ["claude-3-haiku-20240307","claude-3-5-haiku-20241022","claude-3-5-sonnet-20241022","claude-3-opus-20240229"];
+  let lastErr = "";
+  for (const model of models) {
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: model,
+          max_tokens: 1200,
+          system,
+          messages: [{ role: "user", content: user }]
+        })
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        lastErr = "Model " + model + " — " + res.status + ": " + (errBody.error && errBody.error.message ? errBody.error.message : JSON.stringify(errBody));
+        continue;
+      }
+      const data = await res.json();
+      return (data.content || []).map(b => b.text || "").join("");
+    } catch(e) {
+      lastErr = "Model " + model + " — Network error: " + e.message;
+      continue;
+    }
+  }
+  throw new Error("All models failed. Last error: " + lastErr);
 }
 
 // ─── ATOMS ───────────────────────────────────────────────────────────────────
