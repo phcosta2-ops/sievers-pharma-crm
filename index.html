@@ -18,15 +18,7 @@ input,textarea,select{font-family:inherit}
 <body>
 <div id="root" style="height:100vh"></div>
 <div id="err" style="display:none;padding:20px;color:red;font-family:monospace;font-size:12px;white-space:pre-wrap;position:fixed;top:0;left:0;right:0;background:#fff;z-index:9999;max-height:50vh;overflow:auto"></div>
-
-<script>
-window.onerror=function(m,s,l,c,e){
-  var el=document.getElementById("err");
-  if(el){el.style.display="block";el.textContent="JS Error: "+m+"\nLine "+l+"\n"+(e&&e.stack||"");}
-  return false;
-};
-</script>
-
+<script>window.onerror=function(m,s,l,c,e){var el=document.getElementById("err");if(el){el.style.display="block";el.textContent="JS Error: "+m+"\nLine "+l+"\n"+(e&&e.stack||"");}return false;};</script>
 <script>
 /**
  * @license React
@@ -61,7 +53,6 @@ c.useSyncExternalStore=function(a,b,c){return g.current.useSyncExternalStore(a,b
 })();
 
 </script>
-
 <script>
 /**
  * @license React
@@ -332,7 +323,6 @@ function(a,b,c){if(!Vd(b))throw Error(n(200));return Wd(null,a,b,!1,c)};Q.unmoun
 })();
 
 </script>
-
 <script>
 var SEED_ACCOUNTS = [
   {id:1,name:"Abbvie",site:"Sao Paulo/SP",type:"Biotechnology Drug",priority:"high",lastVisit:null,rtt:false,instruments:{toc_lab:{status:"sievers",model:"Sievers 900",brand:""},cond_m9:{status:"sievers",model:"M9",brand:""},eclipse:{status:"competitor",model:"",brand:"1"},cv_lab:{status:"none",model:"",brand:""},cv_ol:{status:"none",model:"",brand:""},fac:{status:"none",model:"",brand:""},fa:{status:"none",model:"",brand:""},online:{status:"competitor",model:"",brand:"Anatel/Thornton"}},departments:{qc_lab:{water_type:"WFI",uso:"Control, Release",loops:"15",pontos_uso:"235",nivel_ideal:"15 ppb",nivel_alarme:"250 ppb",amostras_toc:"",amostras_cond:"",dado_lote:null,jp16:null,contacts:[{name:"Mike Gray",role:"WFI Specialist",email:""}]},cv_lab:{vendor:"Sievers",amostras:"",vendor_type:"",criterio_toc:"",rsd_ideal:"",contacts:[]},rd:{contacts:[]},producao:{contacts:[]}},consumables:{vials:{vendor:"Sievers/Fisher",type:"DUCT/40 mL"},standards:{vendor:"Sievers",desc:"5 sys suits every quarter. (Current State: 30 acc/prec, 30 2 PPM/month, 30 25 uS ver per month and 45 500 ppb ver/month)."}},services:{vendor:"Sievers",desc:"7 900 PM's (No PM's on the M9's, but will purchase them at EOY)"},projects:[],meetings:[],notes:""},
@@ -438,33 +428,8 @@ var SEED_ACCOUNTS = [
   {id:101,name:"Farmanguinhos",site:"Rio de Janeiro/RJ",type:"comprimido",priority:"medium",lastVisit:null,rtt:false,instruments:{toc_lab:{status:"competitor",model:"",brand:"GEHAKA"},cond_m9:{status:"none",model:"",brand:""},eclipse:{status:"none",model:"",brand:""},cv_lab:{status:"none",model:"",brand:""},cv_ol:{status:"none",model:"",brand:""},fac:{status:"none",model:"",brand:""},fa:{status:"none",model:"",brand:""},online:{status:"none",model:"",brand:""}},departments:{qc_lab:{water_type:"",uso:"",loops:"",pontos_uso:"",nivel_ideal:"",nivel_alarme:"",amostras_toc:"",amostras_cond:"",dado_lote:null,jp16:null,contacts:[]},cv_lab:{vendor:"",amostras:"",vendor_type:"",criterio_toc:"",rsd_ideal:"",contacts:[]},rd:{contacts:[]},producao:{contacts:[]}},consumables:{vials:{vendor:"",type:""},standards:{vendor:"",desc:""}},services:{vendor:"",desc:""},projects:[],meetings:[],notes:""},
 ];
 
-var SEED_INTEL = {
-  updatedAt:"",
-  products:[
-    {instrument:"TOC Lab (M9/900)",roadmap:"M9 Elite launch Q3 2025 — sub-ppb detection, 21 CFR Part 11 native",pricing:"List ~USD 28,500",promos:"900 trade-in: 15% off through Q2"},
-    {instrument:"Eclipse (Endotoxin)",roadmap:"Eclipse Plus with automated dilution Q4 2025.",pricing:"List ~USD 34,000",promos:"Bundle Eclipse + TOC: 10% off second unit"},
-    {instrument:"Online TOC",roadmap:"SieversONL 5 — Modbus/OPC-UA native, IP66 enclosure",pricing:"List ~USD 18,000",promos:""},
-    {instrument:"Consumables (DUCT Vials)",roadmap:"DUCT Vial 40mL with conductivity liner",pricing:"",promos:"Volume discount 10%+ for 500+ units/year"},
-  ],
-  competitive:[
-    {competitor:"SPECTRA (Shimadzu)",notes:"Aggressive CV pricing. Counter: TCO + single vendor."},
-    {competitor:"Anatel/Thornton (online)",notes:"Legacy WFI fleet aging. Counter: Sievers ONL."},
-    {competitor:"Metrohm (TOC)",notes:"Growing in smaller pharma. Counter: Sievers regulatory pedigree."},
-  ],
-  regulatory:[
-    {update:"JP-16",notes:"Adoption increasing among Brazil exporters. M9 and 900 fully compliant."},
-    {update:"ANVISA RDC 301/2019",notes:"Sievers referenced in ANVISA technical notes."},
-    {update:"USP <645> / <643>",notes:"Recent revision aligns WFI limits globally."},
-  ],
-  strategic:[
-    {segment:"Injectable manufacturers",priority:"Critical",notes:"TOC+Cond (M9), Eclipse, DUCT Vials. Full ecosystem."},
-    {segment:"Cleaning validation labs",priority:"High",notes:"M9 for rinse water, system suitability kits."},
-    {segment:"Biotech / biologics",priority:"High",notes:"Eclipse entry point, follow with TOC."},
-  ],
-  notes:"",
-};
+var SEED_INTEL = {updatedAt:"",products:[{instrument:"TOC Lab (M9/900)",roadmap:"M9 Elite launch Q3 2025",pricing:"List ~USD 28,500",promos:"900 trade-in: 15% off through Q2"},{instrument:"Eclipse (Endotoxin)",roadmap:"Eclipse Plus Q4 2025.",pricing:"List ~USD 34,000",promos:"Bundle Eclipse + TOC: 10% off"},{instrument:"Online TOC",roadmap:"SieversONL 5",pricing:"List ~USD 18,000",promos:""},{instrument:"Consumables (DUCT Vials)",roadmap:"DUCT Vial 40mL",pricing:"",promos:"Volume discount 10%+"}],competitive:[{competitor:"SPECTRA (Shimadzu)",notes:"Aggressive CV pricing. Counter: TCO + single vendor."},{competitor:"Anatel/Thornton",notes:"Legacy WFI fleet aging. Counter: Sievers ONL."},{competitor:"Metrohm (TOC)",notes:"Counter: Sievers regulatory pedigree."}],regulatory:[{update:"JP-16",notes:"M9 and 900 fully compliant."},{update:"ANVISA RDC 301/2019",notes:"Sievers referenced in ANVISA technical notes."},{update:"USP <645>/<643>",notes:"Recent revision aligns WFI limits globally."}],strategic:[{segment:"Injectable manufacturers",priority:"Critical",notes:"TOC+Cond (M9), Eclipse, DUCT Vials."},{segment:"Cleaning validation labs",priority:"High",notes:"M9 for rinse water, suitability kits."},{segment:"Biotech / biologics",priority:"High",notes:"Eclipse entry point, follow with TOC."}],notes:""};
 </script>
-
 <script>
 const {
   useState,
@@ -1213,6 +1178,10 @@ function Sidebar({
     id: "reports",
     icon: "⊟",
     label: "Conflict Reports"
+  }, {
+    id: "manager",
+    icon: "★",
+    label: "Weekly Report"
   }];
   return /*#__PURE__*/React.createElement("nav", {
     style: {
@@ -3693,6 +3662,143 @@ function ConflictReports({
 }
 
 // ─── APP ROOT ─────────────────────────────────────────────────────────────────
+
+function ManagerReport({accounts, apiKey}) {
+  const [status, setStatus] = React.useState("idle");
+  const [report, setReport] = React.useState("");
+  const [fieldContext, setFieldContext] = React.useState("");
+
+  function generate() {
+    if (!apiKey) { setReport("No API key configured."); setStatus("error"); return; }
+    setStatus("loading"); setReport("");
+
+    // Build aggregated stats for all accounts
+    const total = accounts.length;
+    const withSievers = accounts.filter(a => Object.values(a.instruments).some(i => i.status === "sievers"));
+    const withComp = accounts.filter(a => Object.values(a.instruments).some(i => i.status === "competitor"));
+    const noVisit = accounts.filter(a => !a.lastVisit);
+    const keyAccounts = accounts.filter(a => a.projects && a.projects.some(p => p.keyAccount));
+    const noContacts = accounts.filter(a => {
+      const allContacts = Object.values(a.departments).flatMap(d => d.contacts || []);
+      return allContacts.length === 0;
+    });
+    const withMeetings = accounts.filter(a => a.meetings && a.meetings.length > 0);
+    const recentMeetings = accounts.flatMap(a => (a.meetings || []).map(m => ({account: a.name, ...m}))).sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0,10);
+
+    // Instrument gaps summary
+    const instrGaps = ["toc_lab","cond_m9","eclipse","cv_lab","cv_ol","online"].map(k => ({
+      key: k,
+      sievers: accounts.filter(a => a.instruments[k].status === "sievers").length,
+      competitor: accounts.filter(a => a.instruments[k].status === "competitor").length,
+      none: accounts.filter(a => a.instruments[k].status === "none").length,
+    }));
+
+    // Priority accounts not visited in 60+ days or never
+    const urgentVisits = accounts
+      .map(a => {
+        const d = a.lastVisit ? Math.floor((Date.now() - new Date(a.lastVisit).getTime())/86400000) : 999;
+        return {...a, daysAgo: d};
+      })
+      .filter(a => a.daysAgo > 60 && a.priority !== "low")
+      .sort((a,b) => b.daysAgo - a.daysAgo)
+      .slice(0, 15)
+      .map(a => ({name: a.name, site: a.site, priority: a.priority, daysAgo: a.daysAgo === 999 ? "never visited" : a.daysAgo + "d ago"}));
+
+    // Competitor accounts needing attention
+    const compAccounts = withComp.map(a => {
+      const compInstrs = Object.entries(a.instruments).filter(([k,i]) => i.status === "competitor").map(([k,i]) => k + "(" + (i.brand||"?") + ")");
+      return {name: a.name, site: a.site, priority: a.priority, competitors: compInstrs.join(", ")};
+    });
+
+    // Key accounts status
+    const kaStatus = keyAccounts.map(a => ({
+      name: a.name,
+      projects: a.projects.filter(p => p.keyAccount).map(p => p.name + " — " + (p.status||"no status")),
+      meetings: a.meetings ? a.meetings.length : 0,
+      lastVisit: a.lastVisit || "never",
+    }));
+
+    const payload = {
+      portfolio: {total, withSievers: withSievers.length, withCompetitor: withComp.length, noVisit: noVisit.length, noContacts: noContacts.length, withMeetings: withMeetings.length},
+      instrumentGaps: instrGaps,
+      urgentVisits,
+      competitorAccounts: compAccounts,
+      keyAccounts: kaStatus,
+      recentMeetings: recentMeetings.slice(0,5),
+      additionalContext: fieldContext,
+    };
+
+    callAI(apiKey,
+      "You are a senior sales manager at Sievers (Veolia Water Technologies), responsible for the pharma team in Brazil. Generate a structured weekly team meeting report in English. Be direct, specific, and actionable — this is for a manager to run a team accountability meeting, not a polished presentation.",
+      `Generate a WEEKLY MANAGER REPORT for the Sievers Brazil pharma team meeting.
+
+PORTFOLIO DATA:
+${JSON.stringify(payload, null, 2)}
+
+Generate a structured report with these exact sections:
+
+## 📊 Portfolio Snapshot
+Key numbers the team needs to see.
+
+## 🔴 Urgent — Visit Now
+Accounts overdue for visit (priority high/medium, 60+ days or never visited). Name each account. Be specific about why it matters.
+
+## ⚔️ Competitor Threats — Action Required
+Accounts where competitor is installed. For each: what instrument, what the risk is, what action to take.
+
+## ★ Key Account Status
+Status of each key account project. What's moving, what's stalled.
+
+## 📋 Data Quality Issues
+Accounts missing contacts, missing instrument data, incomplete profiles. The team needs to fill these in.
+
+## ✅ What to Charge the Team This Week
+A numbered list of 5-8 specific, direct accountability points. Name accounts and salespeople where possible. These are the exact things to say in the meeting.
+
+## 📅 Wins & Recent Activity
+Positive notes from recent meetings and activity.
+
+Be specific. Name actual accounts. Max 600 words total.`
+    ).then(out => { setReport(out); setStatus("done"); })
+     .catch(e => { setReport("Error: " + e.message); setStatus("error"); });
+  }
+
+  return /*#__PURE__*/React.createElement("div", {style: {padding: 28, maxWidth: 900}},
+    /*#__PURE__*/React.createElement("div", {style: {marginBottom: 22}},
+      /*#__PURE__*/React.createElement("h1", {style: {fontSize: 20, fontWeight: 500, color: C.text}}, "Weekly Manager Report"),
+      /*#__PURE__*/React.createElement("p", {style: {fontSize: 12, color: C.sub, marginTop: 3}}, "AI-generated accountability guide for your weekly team meeting — based on all " + accounts.length + " accounts")
+    ),
+    /*#__PURE__*/React.createElement("div", {style: {background: C.card, borderRadius: 12, padding: "16px 20px", border: "1px solid " + C.border, marginBottom: 16}},
+      /*#__PURE__*/React.createElement("div", {style: {fontSize: 10, fontWeight: 600, letterSpacing: 1, color: C.sub, textTransform: "uppercase", marginBottom: 10}}, "Context for this week"),
+      /*#__PURE__*/React.createElement("textarea", {
+        value: fieldContext,
+        onChange: e => setFieldContext(e.target.value),
+        placeholder: "Optional: add context for this week's report — recent news, specific accounts to focus on, team issues, targets...",
+        rows: 3,
+        style: {width: "100%", padding: "9px 11px", borderRadius: 8, border: "1px solid " + C.border, fontSize: 12, color: C.text, resize: "vertical", outline: "none", marginBottom: 12}
+      }),
+      /*#__PURE__*/React.createElement("div", {style: {display: "flex", gap: 10, alignItems: "center"}},
+        /*#__PURE__*/React.createElement("button", {
+          onClick: generate,
+          disabled: status === "loading",
+          style: {padding: "10px 20px", borderRadius: 8, background: status === "loading" ? C.gray : "#F59E0B", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: status === "loading" ? "not-allowed" : "pointer", opacity: status === "loading" ? 0.6 : 1}
+        }, status === "loading" ? "Generating report..." : "★ Generate weekly report"),
+        status === "done" && /*#__PURE__*/React.createElement("span", {style: {fontSize: 11, color: C.sub}}, "Generated " + new Date().toLocaleString("en-US"))
+      )
+    ),
+    status === "done" && report && /*#__PURE__*/React.createElement("div", {style: {background: C.card, borderRadius: 12, border: "1px solid " + C.border}},
+      /*#__PURE__*/React.createElement("div", {style: {padding: "14px 20px", borderBottom: "1px solid " + C.border, display: "flex", justifyContent: "space-between", alignItems: "center"}},
+        /*#__PURE__*/React.createElement("div", {style: {fontSize: 13, fontWeight: 500, color: C.text}}, "Weekly Report — " + new Date().toLocaleDateString("en-US", {weekday:"long", year:"numeric", month:"long", day:"numeric"})),
+        /*#__PURE__*/React.createElement("div", {style: {display: "flex", gap: 8}},
+          /*#__PURE__*/React.createElement("button", {onClick: generate, style: {padding: "7px 14px", borderRadius: 7, background: "transparent", color: C.sub, border: "1px solid " + C.border, fontSize: 11, cursor: "pointer"}}, "Regenerate"),
+          /*#__PURE__*/React.createElement("button", {onClick: () => navigator.clipboard && navigator.clipboard.writeText(report), style: {padding: "7px 14px", borderRadius: 7, background: "#F59E0B", color: "#fff", border: "none", fontSize: 11, fontWeight: 500, cursor: "pointer"}}, "Copy for meeting")
+        )
+      ),
+      /*#__PURE__*/React.createElement("div", {style: {padding: 20, fontSize: 12, color: C.text, lineHeight: 1.9, whiteSpace: "pre-wrap", background: C.bg, margin: 16, borderRadius: 10, border: "1px solid " + C.border}}, report)
+    )
+  );
+}
+
 function App() {
   const [view, setView] = useState("dashboard");
   const [selId, setSelId] = useState(null);
@@ -3759,37 +3865,15 @@ function App() {
     accounts: accounts,
     intel: intel,
     apiKey: apiKey
+  }), view === "manager" && /*#__PURE__*/React.createElement(ManagerReport, {
+    accounts: accounts,
+    apiKey: apiKey
   })));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
 </script>
-
 <script>
-
-(function() {
-  var PASS = "sievers2026";
-  if (sessionStorage.getItem("crm_auth") === PASS) return;
-  var overlay = document.createElement("div");
-  overlay.id = "login-overlay";
-  overlay.style.cssText = "position:fixed;inset:0;background:#0B1829;display:flex;align-items:center;justify-content:center;z-index:99999;font-family:-apple-system,Segoe UI,sans-serif;";
-  overlay.innerHTML = '<div style="background:#162942;border-radius:16px;padding:40px;width:340px;border:1px solid #1E3A5F;text-align:center"><div style="color:#0EA5E9;font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Sievers</div><div style="color:#475569;font-size:12px;margin-bottom:32px">Pharma CRM</div><input id="crm-pass" type="password" placeholder="Password" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid #1E3A5F;background:#0B1829;color:#fff;font-size:14px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:2px"><button id="crm-btn" style="width:100%;padding:11px;border-radius:8px;background:#0EA5E9;color:#fff;border:none;font-size:13px;font-weight:500;cursor:pointer">Enter</button><div id="crm-err" style="color:#EF4444;font-size:12px;margin-top:10px;min-height:18px"></div></div>';
-  document.body.appendChild(overlay);
-  function tryLogin() {
-    if (document.getElementById("crm-pass").value === PASS) {
-      sessionStorage.setItem("crm_auth", PASS);
-      document.getElementById("login-overlay").remove();
-    } else {
-      document.getElementById("crm-err").textContent = "Incorrect password.";
-      document.getElementById("crm-pass").value = "";
-      document.getElementById("crm-pass").focus();
-    }
-  }
-  document.getElementById("crm-btn").addEventListener("click", tryLogin);
-  document.getElementById("crm-pass").addEventListener("keydown", function(e){ if(e.key==="Enter") tryLogin(); });
-  setTimeout(function(){ document.getElementById("crm-pass").focus(); }, 100);
-})();
-
+(function(){var PASS="sievers2026";if(sessionStorage.getItem("crm_auth")===PASS)return;var o=document.createElement("div");o.id="login-overlay";o.style.cssText="position:fixed;inset:0;background:#0B1829;display:flex;align-items:center;justify-content:center;z-index:99999;font-family:sans-serif;";o.innerHTML='<div style="background:#162942;border-radius:16px;padding:40px;width:340px;border:1px solid #1E3A5F;text-align:center"><div style="color:#0EA5E9;font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Sievers</div><div style="color:#475569;font-size:12px;margin-bottom:32px">Pharma CRM</div><input id="crm-p" type="password" placeholder="Password" style="width:100%;padding:11px;border-radius:8px;border:1px solid #1E3A5F;background:#0B1829;color:#fff;font-size:14px;outline:none;margin-bottom:12px;text-align:center"><button id="crm-b" style="width:100%;padding:11px;border-radius:8px;background:#0EA5E9;color:#fff;border:none;font-size:13px;font-weight:500;cursor:pointer">Enter</button><div id="crm-e" style="color:#EF4444;font-size:12px;margin-top:10px"></div></div>';document.body.appendChild(o);function t(){if(document.getElementById("crm-p").value===PASS){sessionStorage.setItem("crm_auth",PASS);document.getElementById("login-overlay").remove();}else{document.getElementById("crm-e").textContent="Incorrect password.";document.getElementById("crm-p").value="";}}document.getElementById("crm-b").addEventListener("click",t);document.getElementById("crm-p").addEventListener("keydown",function(e){if(e.key==="Enter")t();});setTimeout(function(){document.getElementById("crm-p").focus();},100);})();
 </script>
-
 </body>
 </html>
