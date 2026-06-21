@@ -22,8 +22,7 @@ input,textarea,select{font-family:inherit}
 <script>
 window.onerror=function(m,s,l,c,e){
   var el=document.getElementById("err");
-  el.style.display="block";
-  el.textContent="Error: "+m+"\nLine: "+l+"\n"+(e&&e.stack||"");
+  if(el){el.style.display="block";el.textContent="JS Error: "+m+"\nLine "+l+"\n"+(e&&e.stack||"");}
   return false;
 };
 </script>
@@ -443,7 +442,7 @@ var SEED_INTEL = {
   updatedAt:"",
   products:[
     {instrument:"TOC Lab (M9/900)",roadmap:"M9 Elite launch Q3 2025 — sub-ppb detection, 21 CFR Part 11 native",pricing:"List ~USD 28,500",promos:"900 trade-in: 15% off through Q2"},
-    {instrument:"Eclipse (Endotoxin)",roadmap:"Eclipse Plus with automated dilution Q4 2025. 96-well adapter kit now available.",pricing:"List ~USD 34,000",promos:"Bundle Eclipse + TOC: 10% off second unit"},
+    {instrument:"Eclipse (Endotoxin)",roadmap:"Eclipse Plus with automated dilution Q4 2025.",pricing:"List ~USD 34,000",promos:"Bundle Eclipse + TOC: 10% off second unit"},
     {instrument:"Online TOC",roadmap:"SieversONL 5 — Modbus/OPC-UA native, IP66 enclosure",pricing:"List ~USD 18,000",promos:""},
     {instrument:"Consumables (DUCT Vials)",roadmap:"DUCT Vial 40mL with conductivity liner",pricing:"",promos:"Volume discount 10%+ for 500+ units/year"},
   ],
@@ -3763,6 +3762,33 @@ function App() {
   })));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
+</script>
+
+<script>
+
+(function() {
+  var PASS = "sievers2026";
+  if (sessionStorage.getItem("crm_auth") === PASS) return;
+  var overlay = document.createElement("div");
+  overlay.id = "login-overlay";
+  overlay.style.cssText = "position:fixed;inset:0;background:#0B1829;display:flex;align-items:center;justify-content:center;z-index:99999;font-family:-apple-system,Segoe UI,sans-serif;";
+  overlay.innerHTML = '<div style="background:#162942;border-radius:16px;padding:40px;width:340px;border:1px solid #1E3A5F;text-align:center"><div style="color:#0EA5E9;font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Sievers</div><div style="color:#475569;font-size:12px;margin-bottom:32px">Pharma CRM</div><input id="crm-pass" type="password" placeholder="Password" style="width:100%;padding:11px 14px;border-radius:8px;border:1px solid #1E3A5F;background:#0B1829;color:#fff;font-size:14px;outline:none;margin-bottom:12px;text-align:center;letter-spacing:2px"><button id="crm-btn" style="width:100%;padding:11px;border-radius:8px;background:#0EA5E9;color:#fff;border:none;font-size:13px;font-weight:500;cursor:pointer">Enter</button><div id="crm-err" style="color:#EF4444;font-size:12px;margin-top:10px;min-height:18px"></div></div>';
+  document.body.appendChild(overlay);
+  function tryLogin() {
+    if (document.getElementById("crm-pass").value === PASS) {
+      sessionStorage.setItem("crm_auth", PASS);
+      document.getElementById("login-overlay").remove();
+    } else {
+      document.getElementById("crm-err").textContent = "Incorrect password.";
+      document.getElementById("crm-pass").value = "";
+      document.getElementById("crm-pass").focus();
+    }
+  }
+  document.getElementById("crm-btn").addEventListener("click", tryLogin);
+  document.getElementById("crm-pass").addEventListener("keydown", function(e){ if(e.key==="Enter") tryLogin(); });
+  setTimeout(function(){ document.getElementById("crm-pass").focus(); }, 100);
+})();
+
 </script>
 
 </body>
