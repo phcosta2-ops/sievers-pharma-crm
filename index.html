@@ -3786,6 +3786,15 @@ Be specific. Name actual accounts. Max 600 words total.`
         status === "done" && /*#__PURE__*/React.createElement("span", {style: {fontSize: 11, color: C.sub}}, "Generated " + new Date().toLocaleString("en-US"))
       )
     ),
+    !apiKey && /*#__PURE__*/React.createElement("div", {style: {background: "rgba(245,158,11,0.1)", border: "1px solid #F59E0B40", borderRadius: 10, padding: "12px 16px", marginBottom: 12, fontSize: 12, color: "#F59E0B"}},
+      "⚠ No API key set. Click ", /*#__PURE__*/React.createElement("strong", null, "⚙ API Settings"), " in the sidebar to add your Anthropic key before generating."
+    ),
+    status === "loading" && /*#__PURE__*/React.createElement("div", {style: {background: C.card, borderRadius: 12, padding: 28, border: "1px solid " + C.border, textAlign: "center", color: C.sub, fontSize: 13}},
+      "Analyzing all " + accounts.length + " accounts and generating report..."
+    ),
+    status === "error" && report && /*#__PURE__*/React.createElement("div", {style: {background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.4)", borderRadius: 10, padding: "12px 16px", marginBottom: 12, fontSize: 12, color: "#EF4444"}},
+      report
+    ),
     status === "done" && report && /*#__PURE__*/React.createElement("div", {style: {background: C.card, borderRadius: 12, border: "1px solid " + C.border}},
       /*#__PURE__*/React.createElement("div", {style: {padding: "14px 20px", borderBottom: "1px solid " + C.border, display: "flex", justifyContent: "space-between", alignItems: "center"}},
         /*#__PURE__*/React.createElement("div", {style: {fontSize: 13, fontWeight: 500, color: C.text}}, "Weekly Report — " + new Date().toLocaleDateString("en-US", {weekday:"long", year:"numeric", month:"long", day:"numeric"})),
