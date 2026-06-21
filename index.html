@@ -1569,11 +1569,102 @@ function Dashboard({
 }
 
 // ─── ACCOUNTS LIST ────────────────────────────────────────────────────────────
+
+function AddAccountModal({accounts, onSave, onClose}) {
+  const [name, setName] = React.useState("");
+  const [site, setSite] = React.useState("");
+  const [type, setType] = React.useState("Medicines");
+  const [priority, setPriority] = React.useState("medium");
+  const [notes, setNotes] = React.useState("");
+
+  const types = ["Biotechnology","Medicines","Generics","Ophthalmological","Vaccines","Food industry","Cosmetics","Supplements","Hemotherapy","Active Pharmaceutical Ingredients","Other"];
+
+  function save() {
+    if (!name.trim()) return;
+    const newAcc = {
+      id: Date.now(),
+      name: name.trim(),
+      site: site.trim(),
+      type,
+      priority,
+      lastVisit: null,
+      rtt: false,
+      instruments: {
+        toc_lab:{status:"none",model:"",brand:""},
+        cond_m9:{status:"none",model:"",brand:""},
+        eclipse:{status:"none",model:"",brand:""},
+        cv_lab:{status:"none",model:"",brand:""},
+        cv_ol:{status:"none",model:"",brand:""},
+        fac:{status:"none",model:"",brand:""},
+        fa:{status:"none",model:"",brand:""},
+        online:{status:"none",model:"",brand:""},
+      },
+      departments:{
+        qc_lab:{water_type:"",uso:"",loops:"",pontos_uso:"",nivel_ideal:"",nivel_alarme:"",amostras_toc:"",amostras_cond:"",dado_lote:null,jp16:null,contacts:[]},
+        cv_lab:{vendor:"",amostras:"",vendor_type:"",criterio_toc:"",rsd_ideal:"",contacts:[]},
+        rd:{contacts:[]},
+        producao:{contacts:[]},
+      },
+      consumables:{vials:{vendor:"",type:""},standards:{vendor:"",desc:""}},
+      services:{vendor:"",desc:""},
+      projects:[],
+      meetings:[],
+      notes,
+    };
+    onSave(newAcc);
+  }
+
+  return /*#__PURE__*/React.createElement("div", {style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:999,padding:20}},
+    /*#__PURE__*/React.createElement("div", {style:{background:C.card,borderRadius:16,width:"100%",maxWidth:500,border:"1px solid "+C.border}},
+      /*#__PURE__*/React.createElement("div", {style:{padding:"14px 20px",borderBottom:"1px solid "+C.border,display:"flex",justifyContent:"space-between",alignItems:"center"}},
+        /*#__PURE__*/React.createElement("div", {style:{fontSize:14,fontWeight:500,color:C.text}}, "Add new account"),
+        /*#__PURE__*/React.createElement("button", {onClick:onClose,style:{color:C.sub,fontSize:18,cursor:"pointer",border:"none",background:"none"}}, "✕")
+      ),
+      /*#__PURE__*/React.createElement("div", {style:{padding:20,display:"flex",flexDirection:"column",gap:12}},
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("div", {style:{fontSize:11,color:C.sub,marginBottom:5}}, "Account name *"),
+          /*#__PURE__*/React.createElement("input", {value:name,onChange:e=>setName(e.target.value),placeholder:"e.g. Novartis Brasil Ltda",autoFocus:true,style:{width:"100%",padding:"8px 11px",borderRadius:8,border:"1px solid "+C.border,fontSize:12,color:C.text,outline:"none"}})
+        ),
+        /*#__PURE__*/React.createElement("div", {style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}},
+          /*#__PURE__*/React.createElement("div", null,
+            /*#__PURE__*/React.createElement("div", {style:{fontSize:11,color:C.sub,marginBottom:5}}, "Site (city/state)"),
+            /*#__PURE__*/React.createElement("input", {value:site,onChange:e=>setSite(e.target.value),placeholder:"e.g. São Paulo/SP",style:{width:"100%",padding:"8px 11px",borderRadius:8,border:"1px solid "+C.border,fontSize:12,color:C.text,outline:"none"}})
+          ),
+          /*#__PURE__*/React.createElement("div", null,
+            /*#__PURE__*/React.createElement("div", {style:{fontSize:11,color:C.sub,marginBottom:5}}, "Priority"),
+            /*#__PURE__*/React.createElement("select", {value:priority,onChange:e=>setPriority(e.target.value),style:{width:"100%",padding:"8px 11px",borderRadius:8,border:"1px solid "+C.border,fontSize:12,color:C.text,outline:"none"}},
+              /*#__PURE__*/React.createElement("option", {value:"high"}, "High"),
+              /*#__PURE__*/React.createElement("option", {value:"medium"}, "Medium"),
+              /*#__PURE__*/React.createElement("option", {value:"low"}, "Low")
+            )
+          )
+        ),
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("div", {style:{fontSize:11,color:C.sub,marginBottom:5}}, "Segment / type"),
+          /*#__PURE__*/React.createElement("select", {value:type,onChange:e=>setType(e.target.value),style:{width:"100%",padding:"8px 11px",borderRadius:8,border:"1px solid "+C.border,fontSize:12,color:C.text,outline:"none"}},
+            types.map(t => /*#__PURE__*/React.createElement("option", {key:t,value:t}, t))
+          )
+        ),
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("div", {style:{fontSize:11,color:C.sub,marginBottom:5}}, "Notes (optional)"),
+          /*#__PURE__*/React.createElement("textarea", {value:notes,onChange:e=>setNotes(e.target.value),placeholder:"Initial notes, context, opportunity...",rows:3,style:{width:"100%",padding:"9px 11px",borderRadius:8,border:"1px solid "+C.border,fontSize:12,color:C.text,resize:"vertical",outline:"none"}})
+        ),
+        /*#__PURE__*/React.createElement("div", {style:{display:"flex",gap:8,justifyContent:"flex-end",paddingTop:4}},
+          /*#__PURE__*/React.createElement("button", {onClick:onClose,style:{padding:"8px 16px",borderRadius:8,background:"transparent",color:C.sub,border:"1px solid "+C.border+"60",fontSize:12,cursor:"pointer"}}, "Cancel"),
+          /*#__PURE__*/React.createElement("button", {onClick:save,disabled:!name.trim(),style:{padding:"8px 16px",borderRadius:8,background:!name.trim()?C.gray:C.blue,color:"#fff",border:"none",fontSize:12,fontWeight:500,cursor:!name.trim()?"not-allowed":"pointer",opacity:!name.trim()?0.5:1}}, "Save account")
+        )
+      )
+    )
+  );
+}
+
 function AccountsList({
   accounts,
-  onSelect
+  onSelect,
+  onAddAccount
 }) {
   const [q, setQ] = useState("");
+  const [showAdd, setShowAdd] = React.useState(false);
   const filtered = accounts.filter(a => [a.name, a.site, a.type].some(f => f.toLowerCase().includes(q.toLowerCase())));
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1599,7 +1690,12 @@ function AccountsList({
       color: C.sub,
       marginTop: 3
     }
-  }, filtered.length, " accounts")), /*#__PURE__*/React.createElement("input", {
+  }, filtered.length, " accounts")), /*#__PURE__*/React.createElement("div", {style:{display:"flex",gap:8}},
+    /*#__PURE__*/React.createElement("button", {
+      onClick: () => setShowAdd(true),
+      style: {padding:"8px 16px",borderRadius:8,background:C.blue,color:"#fff",border:"none",fontSize:12,fontWeight:500,cursor:"pointer"}
+    }, "+ Add account"),
+    /*#__PURE__*/React.createElement("input", {
     value: q,
     onChange: e => setQ(e.target.value),
     placeholder: "Search...",
@@ -1612,7 +1708,11 @@ function AccountsList({
       outline: "none",
       color: C.text
     }
-  })), /*#__PURE__*/React.createElement(Card, {
+  }))), showAdd && /*#__PURE__*/React.createElement(AddAccountModal, {
+    accounts: accounts,
+    onSave: (acc) => { onAddAccount(acc); setShowAdd(false); },
+    onClose: () => setShowAdd(false)
+  }), /*#__PURE__*/React.createElement(Card, {
     style: {
       padding: 0,
       overflow: "hidden"
@@ -3859,9 +3959,8 @@ function App() {
     onSelect: pick
   }), view === "accounts" && /*#__PURE__*/React.createElement(AccountsList, {
     accounts: accounts,
-    onSelect: id => {
-      pick(id);
-    }
+    onSelect: id => { pick(id); },
+    onAddAccount: newAcc => setAccounts(prev => [...prev, newAcc])
   }), view === "detail" && sel && /*#__PURE__*/React.createElement(AccountDetail, {
     account: sel,
     apiKey: apiKey,
@@ -3883,6 +3982,218 @@ ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.c
 </script>
 <script>
 (function(){var PASS="sievers2026";if(sessionStorage.getItem("crm_auth")===PASS)return;var o=document.createElement("div");o.id="login-overlay";o.style.cssText="position:fixed;inset:0;background:#0B1829;display:flex;align-items:center;justify-content:center;z-index:99999;font-family:sans-serif;";o.innerHTML='<div style="background:#162942;border-radius:16px;padding:40px;width:340px;border:1px solid #1E3A5F;text-align:center"><div style="color:#0EA5E9;font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Sievers</div><div style="color:#475569;font-size:12px;margin-bottom:32px">Pharma CRM</div><input id="crm-p" type="password" placeholder="Password" style="width:100%;padding:11px;border-radius:8px;border:1px solid #1E3A5F;background:#0B1829;color:#fff;font-size:14px;outline:none;margin-bottom:12px;text-align:center"><button id="crm-b" style="width:100%;padding:11px;border-radius:8px;background:#0EA5E9;color:#fff;border:none;font-size:13px;font-weight:500;cursor:pointer">Enter</button><div id="crm-e" style="color:#EF4444;font-size:12px;margin-top:10px"></div></div>';document.body.appendChild(o);function t(){if(document.getElementById("crm-p").value===PASS){sessionStorage.setItem("crm_auth",PASS);document.getElementById("login-overlay").remove();}else{document.getElementById("crm-e").textContent="Incorrect password.";document.getElementById("crm-p").value="";}}document.getElementById("crm-b").addEventListener("click",t);document.getElementById("crm-p").addEventListener("keydown",function(e){if(e.key==="Enter")t();});setTimeout(function(){document.getElementById("crm-p").focus();},100);})();
+</script>
+<script>
+
+(function() {
+  var EN_PT = [
+    // Sidebar
+    ["Dashboard", "Painel"],
+    ["Accounts", "Contas"],
+    ["Conflict Reports", "Relatório de Conflito"],
+    ["Weekly Report", "Relatório Semanal"],
+    ["⚙ API Settings", "⚙ Config. API"],
+    ["? How it works", "? Como usar"],
+    ["Sievers", "Sievers"],
+    // Dashboard
+    ["Total accounts", "Total de contas"],
+    ["With Sievers", "Com Sievers"],
+    ["With competitor", "Com concorrente"],
+    ["No visit", "Sem visita"],
+    ["Visit priorities", "Prioridades de visita"],
+    ["Gaps by instrument", "Gaps por instrumento"],
+    ["competitor", "concorrente"],
+    ["gap", "gap"],
+    ["Sievers pharma account overview", "Visão geral das contas farmacêuticas"],
+    // Accounts list
+    ["Pharmaceutical accounts", "Contas farmacêuticas"],
+    ["Search...", "Buscar..."],
+    ["+ Add account", "+ Nova conta"],
+    ["ACCOUNT", "CONTA"],
+    ["LOCATION", "LOCALIZAÇÃO"],
+    ["INSTRUMENTS", "INSTRUMENTOS"],
+    ["PRIORITY", "PRIORIDADE"],
+    ["LAST VISIT", "ÚLTIMA VISITA"],
+    ["no visit", "sem visita"],
+    ["d ago", "d atrás"],
+    ["High", "Alta"],
+    ["Medium", "Média"],
+    ["Low", "Baixa"],
+    // Account detail tabs
+    ["Overview", "Visão geral"],
+    ["QC Lab", "QC Lab"],
+    ["Cleaning Val.", "Valid. Limpeza"],
+    ["Endotoxins", "Endotoxinas"],
+    ["Meetings", "Reuniões"],
+    ["Projects", "Projetos"],
+    ["Contacts", "Contatos"],
+    ["◈ Visit brief", "◈ Brief de visita"],
+    ["Never visited", "Nunca visitado"],
+    ["Opportunities", "Oportunidades"],
+    // Overview tab
+    ["Consumables", "Consumíveis"],
+    ["Services", "Serviços"],
+    ["No consumables data.", "Sem dados de consumíveis."],
+    ["No services data.", "Sem dados de serviços."],
+    // Projects tab
+    ["Active projects", "Projetos ativos"],
+    ["+ Add project", "+ Adicionar projeto"],
+    ["No projects registered.", "Nenhum projeto registrado."],
+    ["Key Account", "Conta Chave"],
+    ["ADD PROJECT", "NOVO PROJETO"],
+    ["Project name *", "Nome do projeto *"],
+    ["Status — e.g. Active, Under evaluation, Closed", "Status — ex: Ativo, Em avaliação, Encerrado"],
+    ["Mark as", "Marcar como"],
+    ["strategic / high-visibility project", "projeto estratégico / alta visibilidade"],
+    ["+ Add project", "+ Adicionar"],
+    ["Done", "Concluído"],
+    // Contacts tab
+    ["QC Lab / WFI", "QC Lab / WFI"],
+    ["Cleaning validation", "Validação de limpeza"],
+    ["R&D / Process Dev.", "P&D / Process. Dev."],
+    ["Production", "Produção"],
+    ["+ Add", "+ Adicionar"],
+    ["No contacts registered.", "Sem contatos registrados."],
+    ["ADD CONTACT", "NOVO CONTATO"],
+    ["Full name *", "Nome completo *"],
+    ["Role / title", "Cargo / título"],
+    ["Email address", "Endereço de e-mail"],
+    ["+ Add contact", "+ Adicionar contato"],
+    // Meetings tab
+    ["Meetings on record", "Reuniões registradas"],
+    ["+ New meeting", "+ Nova reunião"],
+    ["No meetings recorded yet.", "Nenhuma reunião registrada."],
+    ["Click", "Clique em"],
+    ["to record or paste a transcript.", "para gravar ou colar uma transcrição."],
+    ["▶ Start recording", "▶ Iniciar gravação"],
+    ["■ Stop", "■ Parar"],
+    ["◈ Analyze with AI", "◈ Analisar com IA"],
+    ["Analyzing...", "Analisando..."],
+    ["✓ Save meeting", "✓ Salvar reunião"],
+    ["Clear transcript", "Limpar transcrição"],
+    ["Back to meetings", "Voltar para reuniões"],
+    ["← Back", "← Voltar"],
+    ["Meeting title", "Título da reunião"],
+    ["Attendees (comma-separated)", "Participantes (separados por vírgula)"],
+    ["Transcript", "Transcrição"],
+    ["Full transcript", "Transcrição completa"],
+    ["Meeting summary", "Resumo da reunião"],
+    ["Key findings", "Principais achados"],
+    ["Action items", "Itens de ação"],
+    ["Instruments discussed", "Instrumentos discutidos"],
+    ["Suggested profile updates", "Atualizações sugeridas do perfil"],
+    ["New contacts identified", "Novos contatos identificados"],
+    ["Competitive insights", "Insights competitivos"],
+    ["Recommended next steps", "Próximos passos recomendados"],
+    // Visit brief
+    ["AI visit brief", "Brief de visita — IA"],
+    ["AI-powered visit briefing", "Brief de visita com IA"],
+    ["Generate brief", "Gerar brief"],
+    ["Regenerate", "Regenerar"],
+    ["Copy", "Copiar"],
+    // Weekly Report
+    ["Weekly Manager Report", "Relatório Semanal do Gestor"],
+    ["Context for this week", "Contexto desta semana"],
+    ["★ Generate weekly report", "★ Gerar relatório semanal"],
+    ["Generating report...", "Gerando relatório..."],
+    ["Copy for meeting", "Copiar para reunião"],
+    // Conflict Reports
+    ["Conflict reports", "Relatório de conflito"],
+    ["Report configuration", "Configuração do relatório"],
+    ["Additional field notes", "Notas de campo adicionais"],
+    ["◉ Generate conflict report", "◉ Gerar relatório de conflito"],
+    ["Copy report", "Copiar relatório"],
+    ["Intel version", "Versão do Intel"],
+    // Sievers Intel
+    ["Sievers Intelligence", "Inteligência Sievers"],
+    ["Product roadmap & pricing", "Roadmap e preços"],
+    ["Competitive landscape", "Cenário competitivo"],
+    ["Regulatory updates", "Atualizações regulatórias"],
+    ["Strategic priorities by segment", "Prioridades estratégicas por segmento"],
+    ["General intelligence & field notes", "Inteligência geral e notas de campo"],
+    ["Save changes", "Salvar alterações"],
+    ["✓ Saved", "✓ Salvo"],
+    // Add account modal
+    ["Add new account", "Nova conta"],
+    ["Account name *", "Nome da conta *"],
+    ["Site (city/state)", "Localização (cidade/estado)"],
+    ["Priority", "Prioridade"],
+    ["Segment / type", "Segmento / tipo"],
+    ["Notes (optional)", "Notas (opcional)"],
+    ["Cancel", "Cancelar"],
+    ["Save account", "Salvar conta"],
+    // Endotoxins
+    ["Opportunity: no endotoxin system. Pitch Eclipse as integrated Sievers solution alongside TOC.", "Oportunidade: cliente sem sistema de endotoxinas. Apresentar Eclipse como solução integrada Sievers ao lado do TOC."],
+    ["Migration angle: Eclipse + TOC single vendor + 21 CFR Part 11 audit trail.", "Estratégia de migração: Eclipse + TOC fornecedor único + trilha de auditoria 21 CFR Part 11."],
+    // Common
+    ["accounts", "contas"],
+    ["score", "score"],
+    ["No instrument", "Sem instrumento"],
+    ["Unknown", "Desconhecido"],
+    ["No data.", "Sem dados."],
+  ];
+
+  var currentLang = localStorage.getItem("crm_lang") || "en";
+
+  function applyTranslations(lang) {
+    if (lang === "en") return; // Default is English
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    var nodes = [];
+    var node;
+    while (node = walker.nextNode()) {
+      if (node.parentNode && node.parentNode.tagName !== "SCRIPT" && node.parentNode.tagName !== "STYLE") {
+        nodes.push(node);
+      }
+    }
+    nodes.forEach(function(n) {
+      var txt = n.textContent;
+      EN_PT.forEach(function(pair) {
+        if (txt.indexOf(pair[0]) !== -1) {
+          txt = txt.split(pair[0]).join(pair[1]);
+        }
+      });
+      if (txt !== n.textContent) n.textContent = txt;
+    });
+    // Also translate placeholders
+    document.querySelectorAll("input[placeholder],textarea[placeholder]").forEach(function(el) {
+      EN_PT.forEach(function(pair) {
+        if (el.placeholder === pair[0]) el.placeholder = pair[1];
+      });
+    });
+  }
+
+  // Add language toggle button to sidebar when it appears
+  function addToggleBtn() {
+    var sidebar = document.querySelector("nav");
+    if (!sidebar || document.getElementById("lang-toggle")) return;
+    var btn = document.createElement("button");
+    btn.id = "lang-toggle";
+    btn.textContent = currentLang === "en" ? "🇧🇷 Português" : "🇺🇸 English";
+    btn.style.cssText = "width:calc(100% - 36px);margin:6px 18px 0;padding:6px 0;border-radius:6px;background:transparent;border:1px solid #1E3A5F;color:#475569;font-size:11px;cursor:pointer;font-family:inherit;";
+    btn.onclick = function() {
+      currentLang = currentLang === "en" ? "pt" : "en";
+      localStorage.setItem("crm_lang", currentLang);
+      btn.textContent = currentLang === "en" ? "🇧🇷 Português" : "🇺🇸 English";
+      location.reload(); // Simplest way to re-render everything translated
+    };
+    sidebar.appendChild(btn);
+  }
+
+  // Run on load
+  if (currentLang === "pt") {
+    var observer = new MutationObserver(function(mutations) {
+      applyTranslations("pt");
+    });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: false });
+    setTimeout(function() { applyTranslations("pt"); }, 500);
+    setTimeout(function() { applyTranslations("pt"); }, 1500);
+  }
+
+  // Add button after React renders
+  setTimeout(addToggleBtn, 800);
+  setInterval(addToggleBtn, 2000);
+})();
+
 </script>
 </body>
 </html>
