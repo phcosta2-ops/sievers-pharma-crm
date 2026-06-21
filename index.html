@@ -423,7 +423,7 @@ function(a,b,c){if(!Vd(b))throw Error(n(200));return Wd(null,a,b,!1,c)};Q.unmoun
   {id:101,name:"Farmanguinhos",site:"Rio de Janeiro/RJ",type:"comprimido",priority:"medium",lastVisit:null,rtt:false,instruments:{toc_lab:{status:"competitor",model:"",brand:"GEHAKA"},cond_m9:{status:"none",model:"",brand:""},eclipse:{status:"none",model:"",brand:""},cv_lab:{status:"none",model:"",brand:""},cv_ol:{status:"none",model:"",brand:""},fac:{status:"none",model:"",brand:""},fa:{status:"none",model:"",brand:""},online:{status:"none",model:"",brand:""}},departments:{qc_lab:{water_type:"",uso:"",loops:"",pontos_uso:"",nivel_ideal:"",nivel_alarme:"",amostras_toc:"",amostras_cond:"",dado_lote:null,jp16:null,contacts:[]},cv_lab:{vendor:"",amostras:"",vendor_type:"",criterio_toc:"",rsd_ideal:"",contacts:[]},rd:{contacts:[]},producao:{contacts:[]}},consumables:{vials:{vendor:"",type:""},standards:{vendor:"",desc:""}},services:{vendor:"",desc:""},projects:[],meetings:[],notes:""},
 ];
 
-var SEED_INTEL = {updatedAt:"",products:[{instrument:"TOC Lab (M9/900)",roadmap:"M9 Elite",pricing:"~USD 28,500",promos:"15% trade-in"},{instrument:"Eclipse",roadmap:"Eclipse Plus Q4 2025",pricing:"~USD 34,000",promos:"10% bundle"},{instrument:"Online TOC",roadmap:"SieversONL 5",pricing:"~USD 18,000",promos:""},{instrument:"DUCT Vials",roadmap:"40mL liner",pricing:"",promos:"10% volume"}],competitive:[{competitor:"SPECTRA",notes:"CV pricing. Counter: single vendor."},{competitor:"Anatel/Thornton",notes:"Aging fleet. Counter: ONL."},{competitor:"Metrohm",notes:"Counter: regulatory pedigree."}],regulatory:[{update:"JP-16",notes:"M9 and 900 compliant."},{update:"ANVISA RDC 301/2019",notes:"Sievers referenced."},{update:"USP <645>/<643>",notes:"WFI limits aligned."}],strategic:[{segment:"Injectable",priority:"Critical",notes:"TOC+Cond, Eclipse, Vials."},{segment:"CV labs",priority:"High",notes:"M9 rinse water."},{segment:"Biotech",priority:"High",notes:"Eclipse entry."}],notes:""};</script>
+var SEED_INTEL = {updatedAt:"",products:[{instrument:"TOC Lab (M9/900)",roadmap:"M9 Elite launch Q3 2025",pricing:"~USD 28,500",promos:"900 trade-in 15% off"},{instrument:"Eclipse (Endotoxin)",roadmap:"Eclipse Plus Q4 2025",pricing:"~USD 34,000",promos:"Bundle 10% off"},{instrument:"Online TOC",roadmap:"SieversONL 5",pricing:"~USD 18,000",promos:""},{instrument:"DUCT Vials",roadmap:"40mL liner",pricing:"",promos:"Volume 10%+"}],competitive:[{competitor:"SPECTRA (Shimadzu)",notes:"Aggressive CV pricing. Counter: single vendor."},{competitor:"Anatel/Thornton",notes:"Aging fleet. Counter: ONL."},{competitor:"Metrohm",notes:"Counter: regulatory pedigree."}],regulatory:[{update:"JP-16",notes:"M9 and 900 compliant."},{update:"ANVISA RDC 301/2019",notes:"Sievers referenced."},{update:"USP <645>/<643>",notes:"WFI limits aligned."}],strategic:[{segment:"Injectable manufacturers",priority:"Critical",notes:"TOC+Cond, Eclipse, DUCT Vials."},{segment:"Cleaning validation labs",priority:"High",notes:"M9 rinse water."},{segment:"Biotech/biologics",priority:"High",notes:"Eclipse entry."}],notes:""};</script>
 <script>const {
   useState,
   useRef,
@@ -3365,6 +3365,14 @@ function SieversIntel({
     }));
     setSaved(false);
   };
+  const addItem = (k, template) => {
+    setD(p => ({...p, [k]: [...p[k], template]}));
+    setSaved(false);
+  };
+  const removeItem = (k, i) => {
+    setD(p => ({...p, [k]: p[k].filter((_, j) => j !== i)}));
+    setSaved(false);
+  };
   const save = () => {
     onUpdate({
       ...d,
@@ -3425,7 +3433,7 @@ function SieversIntel({
       flexDirection: "column",
       gap: 16
     }
-  }, /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement(SL, null, "Product roadmap & pricing"), d.products.map((p, i) => /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement(SL, null, "Product roadmap & pricing"), /*#__PURE__*/React.createElement("button", {onClick: () => addItem("products", {instrument:"New instrument",roadmap:"",pricing:"",promos:""}),style:{fontSize:11,color:"#0EA5E9",background:"none",border:"1px solid #0EA5E940",borderRadius:6,padding:"3px 10px",cursor:"pointer",marginBottom:8}}, "+ Add instrument"), d.products.map((p, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       display: "grid",
@@ -3471,7 +3479,7 @@ function SieversIntel({
     value: p.promos,
     onChange: v => updArr("products", i, "promos", v),
     rows: 2
-  }))))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement(SL, null, "Competitive landscape"), d.competitive.map((c, i) => /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("button", {onClick: () => removeItem("products", i),title:"Remove",style:{alignSelf:"flex-start",padding:"3px 8px",borderRadius:6,background:"none",border:"1px solid #E2E8F0",color:"#94A3B8",fontSize:11,cursor:"pointer"}}, "✕"))))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement(SL, null, "Competitive landscape"), /*#__PURE__*/React.createElement("button", {onClick: () => addItem("competitive", {competitor:"New competitor",notes:""}),style:{fontSize:11,color:"#0EA5E9",background:"none",border:"1px solid #0EA5E940",borderRadius:6,padding:"3px 10px",cursor:"pointer",marginBottom:8}}, "+ Add competitor"), d.competitive.map((c, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       display: "grid",
@@ -3490,7 +3498,7 @@ function SieversIntel({
     onChange: v => updArr("competitive", i, "notes", v),
     rows: 2,
     placeholder: "Counter-positioning, weaknesses, talking points..."
-  })))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement(SL, null, "Regulatory updates"), d.regulatory.map((r, i) => /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("button", {onClick: () => removeItem("competitive", i),title:"Remove",style:{alignSelf:"flex-start",padding:"3px 8px",borderRadius:6,background:"none",border:"1px solid #E2E8F0",color:"#94A3B8",fontSize:11,cursor:"pointer"}}, "✕")))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement(SL, null, "Regulatory updates"), /*#__PURE__*/React.createElement("button", {onClick: () => addItem("regulatory", {update:"New regulation",notes:""}),style:{fontSize:11,color:"#0EA5E9",background:"none",border:"1px solid #0EA5E940",borderRadius:6,padding:"3px 10px",cursor:"pointer",marginBottom:8}}, "+ Add regulation"), d.regulatory.map((r, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       display: "grid",
@@ -3509,7 +3517,7 @@ function SieversIntel({
     onChange: v => updArr("regulatory", i, "notes", v),
     rows: 2,
     placeholder: "How to leverage in account conversations..."
-  })))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement(SL, null, "Strategic priorities by segment"), d.strategic.map((s, i) => /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {onClick: () => removeItem("regulatory", i),title:"Remove",style:{alignSelf:"flex-start",padding:"3px 8px",borderRadius:6,background:"none",border:"1px solid #E2E8F0",color:"#94A3B8",fontSize:11,cursor:"pointer",marginTop:2}}, "✕"))))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement(SL, null, "Strategic priorities by segment"), /*#__PURE__*/React.createElement("button", {onClick: () => addItem("strategic", {segment:"New segment",priority:"High",notes:""}),style:{fontSize:11,color:"#0EA5E9",background:"none",border:"1px solid #0EA5E940",borderRadius:6,padding:"3px 10px",cursor:"pointer",marginBottom:8}}, "+ Add segment"), d.strategic.map((s, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       display: "grid",
@@ -3539,7 +3547,7 @@ function SieversIntel({
     onChange: v => updArr("strategic", i, "notes", v),
     rows: 2,
     placeholder: "Pitch, key instruments, talking points..."
-  })))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement(SL, null, "General intelligence & field notes"), /*#__PURE__*/React.createElement(TArea, {
+  }, /*#__PURE__*/React.createElement("button", {onClick: () => removeItem("strategic", i),title:"Remove",style:{alignSelf:"flex-start",padding:"3px 8px",borderRadius:6,background:"none",border:"1px solid #E2E8F0",color:"#94A3B8",fontSize:11,cursor:"pointer",marginTop:2}}, "✕"))))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement(SL, null, "General intelligence & field notes"), /*#__PURE__*/React.createElement(TArea, {
     value: d.notes,
     onChange: v => upd("notes", v),
     rows: 4,
