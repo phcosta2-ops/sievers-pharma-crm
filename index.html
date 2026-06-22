@@ -423,7 +423,7 @@ function(a,b,c){if(!Vd(b))throw Error(n(200));return Wd(null,a,b,!1,c)};Q.unmoun
   {id:101,name:"Farmanguinhos",site:"Rio de Janeiro/RJ",type:"comprimido",priority:"medium",lastVisit:null,rtt:false,instruments:{toc_lab:{status:"competitor",model:"",brand:"GEHAKA"},cond_m9:{status:"none",model:"",brand:""},eclipse:{status:"none",model:"",brand:""},cv_lab:{status:"none",model:"",brand:""},cv_ol:{status:"none",model:"",brand:""},fac:{status:"none",model:"",brand:""},fa:{status:"none",model:"",brand:""},online:{status:"none",model:"",brand:""}},departments:{qc_lab:{water_type:"",uso:"",loops:"",pontos_uso:"",nivel_ideal:"",nivel_alarme:"",amostras_toc:"",amostras_cond:"",dado_lote:null,jp16:null,contacts:[]},cv_lab:{vendor:"",amostras:"",vendor_type:"",criterio_toc:"",rsd_ideal:"",contacts:[]},rd:{contacts:[]},producao:{contacts:[]}},consumables:{vials:{vendor:"",type:""},standards:{vendor:"",desc:""}},services:{vendor:"",desc:""},projects:[],meetings:[],notes:""},
 ];
 
-var SEED_INTEL = {updatedAt:"",products:[{instrument:"TOC Lab (M9/900)",roadmap:"M9 Elite launch Q3 2025",pricing:"~USD 28,500",promos:"900 trade-in 15% off"},{instrument:"Eclipse (Endotoxin)",roadmap:"Eclipse Plus Q4 2025",pricing:"~USD 34,000",promos:"Bundle 10% off"},{instrument:"Online TOC",roadmap:"SieversONL 5",pricing:"~USD 18,000",promos:""},{instrument:"DUCT Vials",roadmap:"40mL liner",pricing:"",promos:"Volume 10%+"}],competitive:[{competitor:"SPECTRA (Shimadzu)",notes:"Aggressive CV pricing. Counter: single vendor."},{competitor:"Anatel/Thornton",notes:"Aging fleet. Counter: ONL."},{competitor:"Metrohm",notes:"Counter: regulatory pedigree."}],regulatory:[{update:"JP-16",notes:"M9 and 900 compliant."},{update:"ANVISA RDC 301/2019",notes:"Sievers referenced."},{update:"USP <645>/<643>",notes:"WFI limits aligned."}],strategic:[{segment:"Injectable manufacturers",priority:"Critical",notes:"TOC+Cond, Eclipse, DUCT Vials."},{segment:"Cleaning validation labs",priority:"High",notes:"M9 rinse water."},{segment:"Biotech/biologics",priority:"High",notes:"Eclipse entry."}],notes:""};</script>
+var SEED_INTEL = {updatedAt:"",products:[{instrument:"TOC Lab (M9/900)",roadmap:"M9 Elite",pricing:"~USD 28,500",promos:"15% trade-in"},{instrument:"Eclipse",roadmap:"Eclipse Plus Q4 2025",pricing:"~USD 34,000",promos:"Bundle 10%"},{instrument:"Online TOC",roadmap:"SieversONL 5",pricing:"~USD 18,000",promos:""},{instrument:"DUCT Vials",roadmap:"40mL liner",pricing:"",promos:"10% volume"}],competitive:[{competitor:"SPECTRA",notes:"CV pricing."},{competitor:"Anatel/Thornton",notes:"Aging fleet."},{competitor:"Metrohm",notes:"Regulatory pedigree."}],regulatory:[{update:"JP-16",notes:"M9/900 compliant."},{update:"ANVISA RDC 301/2019",notes:"Sievers referenced."},{update:"USP <645>/<643>",notes:"WFI aligned."}],strategic:[{segment:"Injetáveis",priority:"Critical",notes:"TOC+Cond, Eclipse, Vials."},{segment:"CV labs",priority:"High",notes:"M9 rinse water."},{segment:"Biotech",priority:"High",notes:"Eclipse entry."}],notes:""};</script>
 <script>const {
   useState,
   useRef,
@@ -507,7 +507,13 @@ function getOpps(acc) {
   })).filter(d => d.status !== "sievers");
 }
 async function callAI(apiKey, system, user) {
-  const models = ["claude-3-haiku-20240307","claude-3-5-haiku-20241022","claude-3-5-sonnet-20241022","claude-3-opus-20240229"];
+  const models = [
+    "claude-haiku-4-5-20251001",
+    "claude-sonnet-4-6",
+    "claude-opus-4-6",
+    "claude-haiku-4-5",
+    "claude-sonnet-4-5",
+  ];
   let lastErr = "";
   for (const model of models) {
     try {
@@ -516,7 +522,7 @@ async function callAI(apiKey, system, user) {
         headers: {
           "Content-Type": "application/json",
           "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
+          "anthropic-version": "2024-01-01",
           "anthropic-dangerous-direct-browser-access": "true"
         },
         body: JSON.stringify({
